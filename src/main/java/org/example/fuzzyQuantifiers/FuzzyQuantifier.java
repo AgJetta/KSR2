@@ -1,6 +1,4 @@
-package org.example;
-
-import java.util.ArrayList;
+package org.example.fuzzyQuantifiers;
 
 public class FuzzyQuantifier {
     private String name;

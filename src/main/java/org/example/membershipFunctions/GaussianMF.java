@@ -1,4 +1,4 @@
-package org.example;
+package org.example.membershipFunctions;
 
 public class GaussianMF extends MembershipFunction {
 

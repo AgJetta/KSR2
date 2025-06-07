@@ -6,9 +6,9 @@ public abstract class Set {
 
     private UniverseOfDiscourse universeOfDiscourse;
 
-    private List<element> support;
+    private List<Element> support;
 
-    public Set(UniverseOfDiscourse universeOfDiscourse, List<element> support) {
+    public Set(UniverseOfDiscourse universeOfDiscourse, List<Element> support) {
         this.universeOfDiscourse = universeOfDiscourse;
         this.support = support;
     }
@@ -24,7 +24,7 @@ public abstract class Set {
         return other;
     }
 
-    public List<element> getSupport() {
+    public List<Element> getSupport() {
         return support;
     }
 

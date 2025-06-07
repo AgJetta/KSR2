@@ -1,5 +1,8 @@
 package org.example;
 
+import org.example.membershipFunctions.MembershipFunction;
+
+import java.util.ArrayList;
 import java.util.List;
 
 public class FuzzySet extends Set {
@@ -8,13 +11,13 @@ public class FuzzySet extends Set {
     private double height;
     private MembershipFunction mf;
 
-
-    public FuzzySet(UniverseOfDiscourse universeOfDiscourse, List<element> support, boolean isComplex, double height, MembershipFunction mf) {
+    public FuzzySet(UniverseOfDiscourse universeOfDiscourse, List<Element> support, boolean isComplex, double height, MembershipFunction mf) {
         super(universeOfDiscourse, support);
         this.isComplex = isComplex;
         this.height = height;
         this.mf = mf;
     }
+
 
     public double getHeight() {
         return height;
@@ -28,24 +31,9 @@ public class FuzzySet extends Set {
         return mf;
     }
     @Override
-    public List<element> getSupport() {
-        // Return all elements where membership > 0
-        List<element> nonZeroSupport = new ArrayList<>();
-        for (element e : support) {
-            if (getMembership(e.getValue()) > 0.0) {
-                nonZeroSupport.add(e);
-            }
-        }
-        return nonZeroSupport;
+    public List<Element> getSupport() {
     }
 
-    public List<element> getAlphaCut(double alpha) {
-        List<element> alphaSet = new ArrayList<>();
-        for (element e : support) {
-            if (getMembership(e.getValue()) >= alpha) {
-                alphaSet.add(e);
-            }
-        }
-        return alphaSet;
+    public List<Element> getAlphaCut(double alpha) {
     }
 }

@@ -1,4 +1,6 @@
-package org.example;
+package org.example.fuzzyQuantifiers;
+
+import org.example.FuzzySet;
 
 public class AbsoluteFuzzyQuantifier extends FuzzyQuantifier {
 

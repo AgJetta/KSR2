@@ -1,4 +1,4 @@
-package org.example;
+package org.example.membershipFunctions;
 
 public class TrapezoidalMF extends MembershipFunction {
 

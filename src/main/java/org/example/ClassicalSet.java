@@ -5,16 +5,16 @@ import java.util.List;
 public class ClassicalSet extends Set {
 
 
-    public ClassicalSet(UniverseOfDiscourse universeOfDiscourse, List<element> support) {
+    public ClassicalSet(UniverseOfDiscourse universeOfDiscourse, List<Element> support) {
         super(universeOfDiscourse, support);
     }
 
     @Override
-    public List<element> getSupport() {
+    public List<Element> getSupport() {
         return super.getSupport();
     }
 
-    public boolean isMebmer(element){
+    public boolean isMebmer(Element element) {
 
         //functionalities need to be added
         return false;
