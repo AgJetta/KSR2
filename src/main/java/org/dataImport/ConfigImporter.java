@@ -147,6 +147,33 @@ public class ConfigImporter {
                         parameters.getDouble(1)
                 );
 
+            case "crisp":
+                if (parameters.length() != 2) {
+                    throw new IllegalArgumentException("Crisp function requires exactly 2 parameters");
+                }
+                return MembershipFunctions.crisp(
+                        parameters.getDouble(0),
+                        parameters.getDouble(1)
+                );
+
+            case "rampdown":
+                if (parameters.length() != 2) {
+                    throw new IllegalArgumentException("RampDown function requires exactly 2 parameters");
+                }
+                return MembershipFunctions.rampDown(
+                        parameters.getDouble(0),
+                        parameters.getDouble(1)
+                );
+
+            case "rampup":
+                if (parameters.length() != 2) {
+                    throw new IllegalArgumentException("RampUp function requires exactly 2 parameters");
+                }
+                return MembershipFunctions.rampUp(
+                        parameters.getDouble(0),
+                        parameters.getDouble(1)
+                );
+
             default:
                 throw new IllegalArgumentException("Unknown function type: " + functionType);
         }

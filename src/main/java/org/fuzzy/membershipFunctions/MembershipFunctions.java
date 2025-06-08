@@ -29,4 +29,22 @@ public class MembershipFunctions {
     public static MembershipFunction crisp(double start, double end) {
         return x -> (x >= start && x <= end) ? 1.0 : 0.0;
     }
+
+    public static MembershipFunction rampDown(double start, double end) {
+        return x -> {
+            if (x <= start) return 1.0;
+            if (x >= end) return 0.0;
+            return (end - x) / (end - start);
+        };
+    }
+
+    public static MembershipFunction rampUp(double start, double end) {
+        return x -> {
+            if (x <= start) return 0.0;
+            if (x >= end) return 1.0;
+            return (x - start) / (end - start);
+        };
+    }
+
+
 }
