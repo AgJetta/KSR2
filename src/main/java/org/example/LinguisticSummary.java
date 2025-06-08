@@ -15,16 +15,17 @@ public abstract class LinguisticSummary {
     }
 
     public String generateSummary(Object data) {
-        String quantifierPart = quantifier.getLabel(); // e.g., "Most"
-        String summarizerPart = summarizer.generateSummary(data); // e.g., "people are tall"
-        String qualifierPart = (qualifier != null) ? qualifier.generateQualifierDescription(data) : "";
+//        String quantifierPart = quantifier.getLabel(); // e.g., "Most"
+//        String summarizerPart = summarizer.generateSummary(data); // e.g., "people are tall"
+//        String qualifierPart = (qualifier != null) ? qualifier.generateQualifierDescription(data) : "";
 
         // Example: "Most people who are young are tall."
-        if (!qualifierPart.isEmpty()) {
-            return quantifierPart + " " + qualifierPart + " " + summarizerPart;
-        } else {
-            return quantifierPart + " " + summarizerPart;
-        }
+//        if (!qualifierPart.isEmpty()) {
+//            return quantifierPart + " " + qualifierPart + " " + summarizerPart;
+//        } else {
+//            return quantifierPart + " " + summarizerPart;
+//        }
+        return ""; // Placeholder for actual implementation
     }
 
 }

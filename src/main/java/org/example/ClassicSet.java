@@ -2,24 +2,24 @@ package org.example;
 
 import java.util.List;
 
-public abstract class Set {
+public abstract class ClassicSet {
 
-    private UniverseOfDiscourse universeOfDiscourse;
+    private Universe universe;
 
     private List<Element> support;
 
-    public Set(UniverseOfDiscourse universeOfDiscourse, List<Element> support) {
-        this.universeOfDiscourse = universeOfDiscourse;
+    public ClassicSet(Universe universe, List<Element> support) {
+        this.universe = universe;
         this.support = support;
     }
 
-    public Set union (Set other) {
+    public ClassicSet union (ClassicSet other) {
         //functionalities need to be added
         return other;
     }
 
 
-    public Set intersection (Set other) {
+    public ClassicSet intersection (ClassicSet other) {
         //functionalities need to be added
         return other;
     }

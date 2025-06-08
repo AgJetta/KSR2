@@ -2,11 +2,11 @@ package org.example;
 
 import java.util.List;
 
-public class ClassicalSet extends Set {
+public class ClassicalClassicSet extends ClassicSet {
 
 
-    public ClassicalSet(UniverseOfDiscourse universeOfDiscourse, List<Element> support) {
-        super(universeOfDiscourse, support);
+    public ClassicalClassicSet(Universe universe, List<Element> support) {
+        super(universe, support);
     }
 
     @Override

@@ -1,11 +1,6 @@
 package org.example.membershipFunctions;
 
-public abstract class MembershipFunction {
-
-    public double evaluate(double x) {
-        return x;
-    }
-
-
-
+@FunctionalInterface
+public interface MembershipFunction {
+    double apply(double x);
 }
