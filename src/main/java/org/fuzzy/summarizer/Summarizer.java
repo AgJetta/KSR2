@@ -8,12 +8,13 @@ import java.util.List;
 // Base Summarizer class
 public class Summarizer {
     protected final String name;
-    protected final String fieldName;
+    protected final String linguisticVariableName;
+
     protected final FuzzySet fuzzySet;
 
-    public Summarizer(String name, String fieldName, FuzzySet fuzzySet) {
+    public Summarizer(String name, String linguisticVariableName, FuzzySet fuzzySet) {
         this.name = name;
-        this.fieldName = fieldName;
+        this.linguisticVariableName = linguisticVariableName;
         this.fuzzySet = fuzzySet;
     }
 
@@ -22,7 +23,7 @@ public class Summarizer {
     }
 
     public String getFieldName() {
-        return fieldName;
+        return linguisticVariableName;
     }
 
     public FuzzySet getFuzzySet() {
@@ -31,7 +32,7 @@ public class Summarizer {
 
     // Calculate membership degree for a record
     public double getMembership(SongRecord record) {
-        double fieldValue = record.getAttribute(fieldName);
+        double fieldValue = record.getAttribute(linguisticVariableName);
         return fuzzySet.getMembership(fieldValue);
     }
 

@@ -1,22 +1,55 @@
 package org.fuzzy;
 
 import org.fuzzy.fuzzyQuantifiers.Quantifier;
+import org.fuzzy.membershipFunctions.MembershipFunction;
 import org.fuzzy.membershipFunctions.MembershipFunctions;
 import org.fuzzy.summarizer.Summarizer;
 import org.fuzzy.summarizer.SummarizerFactory;
 
 import org.dataImport.ConfigImporter;
 import org.dataImport.CsvSongImporter;
+import org.json.JSONArray;
+import org.json.JSONObject;
 
-import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.io.InputStream;
+import java.nio.charset.StandardCharsets;
+import java.util.*;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
+        // Load config.json from resources
+        InputStream input = ConfigImporter.class.getClassLoader().getResourceAsStream("org/dataLoader/config.json");
+        assert input != null;
+        String jsonText = new Scanner(input, StandardCharsets.UTF_8).useDelimiter("\\A").next();
+        JSONObject config = new JSONObject(jsonText);
+
+        // Access variables and terms
+        List<Summarizer> summarizers = new ArrayList<>();
+        JSONArray variables = config.getJSONArray("variables");
+        for (int i = 0; i < variables.length(); i++) {
+            JSONObject variable = variables.getJSONObject(i);
+            System.out.println("Variable: " + variable.getString("name"));
+
+            JSONArray terms = variable.getJSONArray("terms");
+            for (int j = 0; j < terms.length(); j++) {
+                JSONObject term = terms.getJSONObject(j);
+                System.out.println("  Term: " + term.getString("name"));
+                System.out.println("    Function: " + term.getString("functionType"));
+                System.out.println("    Parameters: " + term.getJSONArray("parameters"));
+
+//            Universe universe = new Universe(
+//                    term.getJSONArray("universe").get(0),
+//                    term.getJSONArray("universe").get(1),
+//                    true);
+//            MembershipFunction membershipFunction = MembershipFunctions. term.getString("functionType");
+//            FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
+//            Summarizer summarizer = new Summarizer(term.getString("name"), term.getString("fieldName"), fuzzySet);
+//            summarizers.add(summarizer);
+            }
+        }
+
         // Create quantifiers
         Quantifier most = Quantifier.most();
         Quantifier few = Quantifier.few();
