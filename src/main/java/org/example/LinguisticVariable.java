@@ -7,6 +7,6 @@ public class LinguisticVariable {
 
     private String name;
     private Universe universe;
-    private List<Label> labels = new ArrayList<>();
+    private List<Summarizer> summarizers = new ArrayList<>();
 
 }
