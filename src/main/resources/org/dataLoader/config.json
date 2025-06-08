@@ -51,18 +51,34 @@
       ]
     },
     {
-    "name": "MNIEJ NIŻ 100",
-    "relative": false,
-    "functionType": "trapezoidal",
-    "parameters": [0, 0, 95, 100],
-    "universe": [0, 10000]
+      "name": "MNIEJ NIŻ 100",
+      "relative": false,
+      "functionType": "trapezoidal",
+      "parameters": [
+        0,
+        0,
+        95,
+        100
+      ],
+      "universe": [
+        0,
+        10000
+      ]
     },
     {
       "name": "WIĘCEJ NIŻ 1000",
       "relative": false,
       "functionType": "trapezoidal",
-      "parameters": [1000, 1050, 10000, 10000],
-      "universe": [0, 10000]
+      "parameters": [
+        1000,
+        1050,
+        10000,
+        10000
+      ],
+      "universe": [
+        0,
+        10000
+      ]
     }
   ],
   "variables": [
@@ -153,362 +169,362 @@
             100,
             105
           ]
-        },
+        }
+      ]
+    },
+    {
+      "name": "Czas trwania",
+      "fieldName": "duration_ms",
+      "universe": [
+        0,
+        517000
+      ],
+      "terms": [
         {
-          "name": "Czas trwania",
-          "fieldName": "duration_ms",
-          "universe": [
-            0,
-            517000
-          ],
-          "terms": [
-            {
-              "name": "Piosenka Radiowa",
-              "functionType": "gaussian",
-              "parameters": [
-                90000,
-                45000
-              ]
-            },
-            {
-              "name": "Piosenka Pop",
-              "functionType": "gaussian",
-              "parameters": [
-                225000,
-                37500
-              ]
-            },
-            {
-              "name": "Ballada",
-              "functionType": "gaussian",
-              "parameters": [
-                315000,
-                37500
-              ]
-            },
-            {
-              "name": "Rozszerzony Miks",
-              "functionType": "gaussian",
-              "parameters": [
-                450000,
-                75000
-              ]
-            }
+          "name": "Piosenka Radiowa",
+          "functionType": "gaussian",
+          "parameters": [
+            90000,
+            45000
           ]
         },
         {
-          "name": "Motywacja tańczyć",
-          "fieldName": "danceability",
+          "name": "Piosenka Pop",
+          "functionType": "gaussian",
+          "parameters": [
+            225000,
+            37500
+          ]
+        },
+        {
+          "name": "Ballada",
+          "functionType": "gaussian",
+          "parameters": [
+            315000,
+            37500
+          ]
+        },
+        {
+          "name": "Rozszerzony Miks",
+          "functionType": "gaussian",
+          "parameters": [
+            450000,
+            75000
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Motywacja tańczyć",
+      "fieldName": "danceability",
+      "universe": [
+        0.0,
+        1.0
+      ],
+      "terms": [
+        {
+          "name": "Słaba",
+          "functionType": "trapezoidal",
+          "parameters": [
+            -0.1,
+            0.0,
+            0.1,
+            0.3
+          ]
+        },
+        {
+          "name": "Zwyczajna",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.2,
+            0.4,
+            0.6,
+            0.8
+          ]
+        },
+        {
+          "name": "Mocna",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.7,
+            0.9,
+            1.0,
+            1.1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Akustyczność",
+      "fieldName": "acousticness",
+      "universe": [
+        0.0,
+        1.0
+      ],
+      "terms": [
+        {
+          "name": "Full synth",
+          "functionType": "trapezoidal",
+          "parameters": [
+            -0.1,
+            0.0,
+            0.05,
+            0.1
+          ]
+        },
+        {
+          "name": "Elektroniczna",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.1,
+            0.2,
+            0.2,
+            0.3
+          ]
+        },
+        {
+          "name": "Elektro-akustyczna",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.3,
+            0.45,
+            0.45,
+            0.6
+          ]
+        },
+        {
+          "name": "Naturalna",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.6,
+            0.75,
+            0.75,
+            0.9
+          ]
+        },
+        {
+          "name": "Unplugged",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.9,
+            1.0,
+            1.0,
+            1.1
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Tempo",
+      "fieldName": "tempo",
+      "universe": [
+        0,
+        250
+      ],
+      "terms": [
+        {
+          "name": "Bardzo Wolne",
+          "functionType": "trapezoidal",
+          "parameters": [
+            50,
+            50,
+            60,
+            70
+          ]
+        },
+        {
+          "name": "Wolne",
+          "functionType": "trapezoidal",
+          "parameters": [
+            60,
+            75,
+            80,
+            90
+          ]
+        },
+        {
+          "name": "Średnie",
+          "functionType": "trapezoidal",
+          "parameters": [
+            80,
+            105,
+            110,
+            130
+          ]
+        },
+        {
+          "name": "Szybkie",
+          "functionType": "trapezoidal",
+          "parameters": [
+            120,
+            140,
+            150,
+            180
+          ]
+        },
+        {
+          "name": "Bardzo Szybkie",
+          "functionType": "rampUp",
+          "parameters": [
+            170,
+            190
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Instrumentalność",
+      "fieldName": "instrumentalnosc",
+      "universe": [
+        0.0,
+        1.0
+      ],
+      "terms": [
+        {
+          "name": "Wokalna",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.0,
+            0.0,
+            0.2,
+            0.4
+          ]
+        },
+        {
+          "name": "Częściowo instrumentalna",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.3,
+            0.45,
+            0.55,
+            0.7
+          ]
+        },
+        {
+          "name": "Instrumentalna",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.6,
+            0.8,
+            1.0,
+            1.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Żywość",
+      "fieldName": "zywosc",
+      "universe": [
+        0.0,
+        1.0
+      ],
+      "terms": [
+        {
+          "name": "Studyjna",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.0,
+            0.0,
+            0.15,
+            0.3
+          ]
+        },
+        {
+          "name": "Częściowo na żywo",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.25,
+            0.35,
+            0.45,
+            0.6
+          ]
+        },
+        {
+          "name": "Na żywo",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.55,
+            0.65,
+            0.75,
+            0.9
+          ]
+        },
+        {
+          "name": "Koncert masowy",
+          "functionType": "rampUp",
+          "parameters": [
+            0.85,
+            1.0
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Pozytywność nastroju",
+      "fieldName": "nastroj",
+      "universe": [
+        0.0,
+        1.0
+      ],
+      "terms": [
+        {
+          "name": "Negatywna",
+          "functionType": "rampDown",
+          "parameters": [
+            0.0,
+            0.4
+          ]
+        },
+        {
+          "name": "Neutralna",
+          "functionType": "trapezoidal",
+          "parameters": [
+            0.3,
+            0.45,
+            0.55,
+            0.7
+          ]
+        },
+        {
+          "name": "Pozytywna",
+          "functionType": "rampUp",
+          "parameters": [
+            0.6,
+            1.0
+          ]
+        },
+        {
+          "name": "Energia",
+          "fieldName": "energia",
           "universe": [
             0.0,
             1.0
           ],
           "terms": [
             {
-              "name": "Słaba",
-              "functionType": "trapezoidal",
+              "name": "Uspokajająca",
+              "functionType": "crisp",
               "parameters": [
-                -0.1,
                 0.0,
-                0.1,
                 0.3
               ]
             },
             {
-              "name": "Zwyczajna",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.2,
-                0.4,
-                0.6,
-                0.8
-              ]
-            },
-            {
-              "name": "Mocna",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.7,
-                0.9,
-                1.0,
-                1.1
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Akustyczność",
-          "fieldName": "acousticness",
-          "universe": [
-            0.0,
-            1.0
-          ],
-          "terms": [
-            {
-              "name": "Full synth",
-              "functionType": "trapezoidal",
-              "parameters": [
-                -0.1,
-                0.0,
-                0.05,
-                0.1
-              ]
-            },
-            {
-              "name": "Elektroniczna",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.1,
-                0.2,
-                0.2,
-                0.3
-              ]
-            },
-            {
-              "name": "Elektro-akustyczna",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.3,
-                0.45,
-                0.45,
-                0.6
-              ]
-            },
-            {
-              "name": "Naturalna",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.6,
-                0.75,
-                0.75,
-                0.9
-              ]
-            },
-            {
-              "name": "Unplugged",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.9,
-                1.0,
-                1.0,
-                1.1
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Tempo",
-          "fieldName": "tempo",
-          "universe": [
-            0,
-            250
-          ],
-          "terms": [
-            {
-              "name": "Bardzo Wolne",
-              "functionType": "trapezoidal",
-              "parameters": [
-                50,
-                50,
-                60,
-                70
-              ]
-            },
-            {
-              "name": "Wolne",
-              "functionType": "trapezoidal",
-              "parameters": [
-                60,
-                75,
-                80,
-                90
-              ]
-            },
-            {
-              "name": "Średnie",
-              "functionType": "trapezoidal",
-              "parameters": [
-                80,
-                105,
-                110,
-                130
-              ]
-            },
-            {
-              "name": "Szybkie",
-              "functionType": "trapezoidal",
-              "parameters": [
-                120,
-                140,
-                150,
-                180
-              ]
-            },
-            {
-              "name": "Bardzo Szybkie",
-              "functionType": "rampUp",
-              "parameters": [
-                170,
-                190
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Instrumentalność",
-          "fieldName": "instrumentalnosc",
-          "universe": [
-            0.0,
-            1.0
-          ],
-          "terms": [
-            {
-              "name": "Wokalna",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.0,
-                0.0,
-                0.2,
-                0.4
-              ]
-            },
-            {
-              "name": "Częściowo instrumentalna",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.3,
-                0.45,
-                0.55,
-                0.7
-              ]
-            },
-            {
-              "name": "Instrumentalna",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.6,
-                0.8,
-                1.0,
-                1.0
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Żywość",
-          "fieldName": "zywosc",
-          "universe": [
-            0.0,
-            1.0
-          ],
-          "terms": [
-            {
-              "name": "Studyjna",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.0,
-                0.0,
-                0.15,
-                0.3
-              ]
-            },
-            {
-              "name": "Częściowo na żywo",
-              "functionType": "trapezoidal",
+              "name": "Orzeźwiająca",
+              "functionType": "triangular",
               "parameters": [
                 0.25,
-                0.35,
-                0.45,
-                0.6
+                0.5,
+                0.75
               ]
             },
             {
-              "name": "Na żywo",
-              "functionType": "trapezoidal",
+              "name": "Bardzo Energiczna",
+              "functionType": "crisp",
               "parameters": [
-                0.55,
-                0.65,
-                0.75,
-                0.9
-              ]
-            },
-            {
-              "name": "Koncert masowy",
-              "functionType": "rampUp",
-              "parameters": [
-                0.85,
+                0.7,
                 1.0
-              ]
-            }
-          ]
-        },
-        {
-          "name": "Pozytywność nastroju",
-          "fieldName": "nastroj",
-          "universe": [
-            0.0,
-            1.0
-          ],
-          "terms": [
-            {
-              "name": "Negatywna",
-              "functionType": "rampDown",
-              "parameters": [
-                0.0,
-                0.4
-              ]
-            },
-            {
-              "name": "Neutralna",
-              "functionType": "trapezoidal",
-              "parameters": [
-                0.3,
-                0.45,
-                0.55,
-                0.7
-              ]
-            },
-            {
-              "name": "Pozytywna",
-              "functionType": "rampUp",
-              "parameters": [
-                0.6,
-                1.0
-              ]
-            },
-            {
-              "name": "Energia",
-              "fieldName": "energia",
-              "universe": [
-                0.0,
-                1.0
-              ],
-              "terms": [
-                {
-                  "name": "Uspokajająca",
-                  "functionType": "crisp",
-                  "parameters": [
-                    0.0,
-                    0.3
-                  ]
-                },
-                {
-                  "name": "Orzeźwiająca",
-                  "functionType": "triangular",
-                  "parameters": [
-                    0.25,
-                    0.5,
-                    0.75
-                  ]
-                },
-                {
-                  "name": "Bardzo Energiczna",
-                  "functionType": "crisp",
-                  "parameters": [
-                    0.7,
-                    1.0
-                  ]
-                }
               ]
             }
           ]
@@ -517,6 +533,3 @@
     }
   ]
 }
-
-
-
