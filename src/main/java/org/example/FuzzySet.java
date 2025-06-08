@@ -11,10 +11,12 @@ import java.util.stream.Collectors;
 public class FuzzySet {
     private final Universe universe;
     private final Map<Double, Double> memberships;
+    private final MembershipFunction membershipFunction;
 
     // Constructor for fuzzy set with explicit memberships
-    public FuzzySet(Universe universe, Map<Double, Double> memberships) {
+    public FuzzySet(Universe universe, MembershipFunction membershipFunction, Map<Double, Double> memberships) {
         this.universe = universe;
+        this.membershipFunction = membershipFunction;
         this.memberships = new HashMap<>();
 
         // Validate and store memberships
@@ -37,13 +39,14 @@ public class FuzzySet {
     public FuzzySet(Universe universe, MembershipFunction function) {
         this.universe = universe;
         this.memberships = new HashMap<>();
+        this.membershipFunction = function;
 
         if (universe.isDense()) {
             // For dense universe, we need to sample points
             // This is a simplified approach - in practice you might want more sophisticated sampling
             double step = universe.getLength() / 1000.0; // Sample 1000 points
             for (double x = universe.getStart(); x <= universe.getEnd(); x += step) {
-                double membership = function.apply(x);
+                double membership = this.membershipFunction.apply(x);
                 if (membership > 0.0) { // Only store non-zero memberships
                     this.memberships.put(x, membership);
                 }
@@ -51,7 +54,7 @@ public class FuzzySet {
         } else {
             // For discrete universe, evaluate at all points
             for (double x : universe.getDiscretePoints()) {
-                double membership = function.apply(x);
+                double membership = this.membershipFunction.apply(x);
                 if (membership > 0.0) {
                     this.memberships.put(x, membership);
                 }
@@ -59,27 +62,46 @@ public class FuzzySet {
         }
     }
 
-    // Factory methods for classic sets
+    /** Factory methods for classic sets
+     * Creates a classic fuzzy set with full membership in the range [start, end]
+     * @param universe of Discourse
+     * @param start Values bigger than or equal to this will have full membership
+     * @param end Values smaller than or equal to this will have full membership
+     * @return FuzzySet with full membership in the specified range and crisp membership function
+     */
     public static FuzzySet classicSet(Universe universe, double start, double end) {
         return new FuzzySet(universe, MembershipFunctions.crisp(start, end));
     }
 
-    public static FuzzySet classicSet(Universe universe, Set<Double> elements) {
+    /** Factory method for classic fuzzy set with specific elements
+     * Creates a classic fuzzy set with full membership for specified elements
+     * @param universe of Discourse
+     * @param start Values bigger than or equal to this will have full membership
+     * @param end Values smaller than or equal to this will have full membership
+     * @param elements Set of elements with full membership
+     * @return FuzzySet with full membership for specified elements and crisp membership function
+     */
+    public static FuzzySet classicSet(Universe universe, double start, double end, Set<Double> elements) {
+
         Map<Double, Double> memberships = new HashMap<>();
         for (double x : elements) {
             memberships.put(x, 1.0);
         }
-        return new FuzzySet(universe, memberships);
-    }
-
-    // Empty set
-    public static FuzzySet empty(Universe universe) {
-        return new FuzzySet(universe, new HashMap<>());
+        return new FuzzySet(universe, MembershipFunctions.crisp(start, end), memberships);
     }
 
     // Basic operations
     public double getMembership(double x) {
-        return memberships.getOrDefault(x, 0.0);
+        double membership = memberships.getOrDefault(x, -1.0);
+        if (membership == -1.0) {
+            membership = membershipFunction.apply(x);
+            if (membership > 0.0) {
+                memberships.put(x, membership);
+            } else {
+                membership = 0.0;
+            }
+        }
+        return membership;
     }
 
     public Set<Tuple> getTuples() {
@@ -143,7 +165,7 @@ public class FuzzySet {
             }
         }
 
-        return new FuzzySet(universe, newMemberships);
+        return new FuzzySet(universe, membershipFunction, newMemberships);
     }
 
     public FuzzySet union(FuzzySet other) {
@@ -162,7 +184,7 @@ public class FuzzySet {
             }
         }
 
-        return new FuzzySet(universe, newMemberships);
+        return new FuzzySet(universe, membershipFunction, newMemberships);
     }
 
     public FuzzySet intersection(FuzzySet other) {
@@ -181,7 +203,7 @@ public class FuzzySet {
             }
         }
 
-        return new FuzzySet(universe, newMemberships);
+        return new FuzzySet(universe, membershipFunction, newMemberships);
     }
 
     // Additional methods for linguistic summaries

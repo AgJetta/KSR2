@@ -1,5 +1,7 @@
 package org.example;
 
+import org.example.summarizer.Summarizer;
+
 import java.util.ArrayList;
 import java.util.List;
 
