@@ -1,0 +1,33 @@
+{
+  "functionTypes": ["triangle", "gauss", "trapezoid"],
+  "quantifiers": [
+    {
+      "name": "OKOŁO POŁOWY",
+      "relative": true,
+      "functionType": "triangle",
+      "parameters": [0.25, 0.5, 0.75]
+    }
+  ],
+  "variables": [
+    {
+      "name": "Popularność",
+      "terms": [
+        {
+          "name": "Nisza",
+          "functionType": "trapezoid",
+          "parameters": [-2, 0, 20, 40]
+        },
+        {
+          "name": "Mainstream",
+          "functionType": "trapezoid",
+          "parameters": [20, 40, 60, 80]
+        },
+        {
+          "name": "Hit",
+          "functionType": "trapezoid",
+          "parameters": [60, 80, 100, 102]
+        }
+      ]
+    }
+  ]
+}
