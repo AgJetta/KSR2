@@ -18,6 +18,12 @@ public class Summarizer {
         this.fuzzySet = fuzzySet;
     }
 
+    public void calculateAllMemberships(List<SongRecord> dataset){
+        // Call FuzzySet.getmembership() on all dataset records, which are SongRecord
+        for (SongRecord record: dataset){
+            this.fuzzySet.calculateMembershipAndAdd(record.getAttribute(linguisticVariableName));
+        }
+    }
     public String getName() {
         return name;
     }
@@ -30,17 +36,13 @@ public class Summarizer {
         return fuzzySet;
     }
 
-    // Calculate membership degree for a record
-    public double getMembership(SongRecord record) {
-        double fieldValue = record.getAttribute(linguisticVariableName);
-        return fuzzySet.getMembership(fieldValue);
+    public double getMembership(double value) {
+        return fuzzySet.getMembership(value);
     }
 
     // Calculate total membership sum for dataset
     public double calculateR(List<SongRecord> dataset) {
-        return dataset.stream()
-                .mapToDouble(this::getMembership)
-                .sum();
+        return fuzzySet.cardinality();
     }
 
     @Override

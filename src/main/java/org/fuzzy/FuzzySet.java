@@ -11,10 +11,54 @@ import java.util.stream.Collectors;
 public class FuzzySet {
     private final Universe universe;
     private final Map<Double, Double> memberships;
+    private Map<Double, Integer> frequencies = new HashMap<>();
     private final MembershipFunction membershipFunction;
 
     // Constructor for fuzzy set with explicit memberships
     public FuzzySet(Universe universe, MembershipFunction membershipFunction, Map<Double, Double> memberships) {
+        this.universe = universe;
+        this.membershipFunction = membershipFunction;
+        this.memberships = new HashMap<>();
+
+        if (universe.isDense()) {
+            // For dense universe, we need to sample points
+            double step = universe.getLength() / 1000.0; // Sample 1000 points
+            for (double x = universe.getStart(); x <= universe.getEnd(); x += step) {
+                double membership = this.membershipFunction.apply(x);
+                if (membership >= 0.0) { // Only store non-zero memberships
+                    this.memberships.put(x, membership);
+                }
+            }
+        } else {
+            // For discrete universe, evaluate at all points
+            for (double x : universe.getDiscretePoints()) {
+                double membership = this.membershipFunction.apply(x);
+                if (membership >= 0.0) {
+                    this.memberships.put(x, membership);
+                }
+            }
+        }
+
+        // Validate and store memberships
+        for (Map.Entry<Double, Double> entry : memberships.entrySet()) {
+            double x = entry.getKey();
+            double membership = entry.getValue();
+
+//            if (!universe.contains(x)) {
+//                throw new IllegalArgumentException("Element " + x + " not in universe");
+//            }
+            if (membership < 0.0 || membership > 1.0) {
+                throw new IllegalArgumentException("Membership must be in [0, 1]");
+            }
+
+            this.memberships.put(x, membership);
+            this.frequencies.merge(x, 1, Integer::sum);
+        }
+    }
+
+    public FuzzySet(Universe universe, MembershipFunction membershipFunction, Map<Double, Double> memberships,
+                    Map<Double, Integer> frequencies
+    ) {
         this.universe = universe;
         this.membershipFunction = membershipFunction;
         this.memberships = new HashMap<>();
@@ -24,15 +68,31 @@ public class FuzzySet {
             double x = entry.getKey();
             double membership = entry.getValue();
 
-            if (!universe.contains(x)) {
-                throw new IllegalArgumentException("Element " + x + " not in universe");
-            }
+//            if (!universe.contains(x)) {
+//                throw new IllegalArgumentException("Element " + x + " not in universe");
+//            }
             if (membership < 0.0 || membership > 1.0) {
                 throw new IllegalArgumentException("Membership must be in [0, 1]");
             }
 
             this.memberships.put(x, membership);
         }
+
+        // Store frequencies
+        this.frequencies = new HashMap<>(frequencies);
+    }
+
+    public void calculateMembershipAndAdd(double x) {
+        double membership = membershipFunction.apply(x);
+        if (!universe.contains(x)) {
+            throw new IllegalArgumentException("Element " + x + " not in universe");
+        }
+        if (membership < 0.0 || membership > 1.0) {
+            throw new IllegalArgumentException("Membership must be in [0, 1]");
+        }
+
+        memberships.put(x, membership);
+        frequencies.merge(x, 1, Integer::sum);
     }
 
     // Constructor with membership function
@@ -43,11 +103,10 @@ public class FuzzySet {
 
         if (universe.isDense()) {
             // For dense universe, we need to sample points
-            // This is a simplified approach - in practice you might want more sophisticated sampling
             double step = universe.getLength() / 1000.0; // Sample 1000 points
             for (double x = universe.getStart(); x <= universe.getEnd(); x += step) {
                 double membership = this.membershipFunction.apply(x);
-                if (membership > 0.0) { // Only store non-zero memberships
+                if (membership >= 0.0) { // Only store non-zero memberships
                     this.memberships.put(x, membership);
                 }
             }
@@ -55,10 +114,26 @@ public class FuzzySet {
             // For discrete universe, evaluate at all points
             for (double x : universe.getDiscretePoints()) {
                 double membership = this.membershipFunction.apply(x);
-                if (membership > 0.0) {
+                if (membership >= 0.0) {
                     this.memberships.put(x, membership);
                 }
             }
+        }
+
+        // Validate and store memberships
+        for (Map.Entry<Double, Double> entry : memberships.entrySet()) {
+            double x = entry.getKey();
+            double membership = entry.getValue();
+
+//            if (!universe.contains(x)) {
+//                throw new IllegalArgumentException("Element " + x + " not in universe");
+//            }
+            if (membership < 0.0 || membership > 1.0) {
+                throw new IllegalArgumentException("Membership must be in [0, 1]");
+            }
+
+            this.memberships.put(x, membership);
+            this.frequencies.merge(x, 1, Integer::sum);
         }
     }
 
@@ -97,6 +172,7 @@ public class FuzzySet {
             membership = membershipFunction.apply(x);
             if (membership > 0.0) {
                 memberships.put(x, membership);
+                this.frequencies.merge(x, 1, Integer::sum);
             } else {
                 membership = 0.0;
             }
@@ -150,11 +226,13 @@ public class FuzzySet {
     // Set operations
     public FuzzySet complement() {
         Map<Double, Double> newMemberships = new HashMap<>();
+        Map<Double, Integer> newFrequencies = new HashMap<>();
 
         if (universe.isDense()) {
             // For dense universe, complement of stored points
             for (Map.Entry<Double, Double> entry : memberships.entrySet()) {
                 newMemberships.put(entry.getKey(), 1.0 - entry.getValue());
+                newFrequencies.merge(entry.getKey(), 1,  Integer::sum);
             }
             // Add points not in original set with membership 1.0
             // This is simplified - in practice you'd need more sophisticated handling
@@ -162,10 +240,11 @@ public class FuzzySet {
             // For discrete universe, evaluate complement for all points
             for (double x : universe.getDiscretePoints()) {
                 newMemberships.put(x, 1.0 - getMembership(x));
+                newFrequencies.merge(x, 1,  Integer::sum);
             }
         }
 
-        return new FuzzySet(universe, membershipFunction, newMemberships);
+        return new FuzzySet(universe, membershipFunction, newMemberships, newFrequencies);
     }
 
     public FuzzySet union(FuzzySet other) {
@@ -232,7 +311,9 @@ public class FuzzySet {
 
     // Cardinality (sigma-count)
     public double cardinality() {
-        return memberships.values().stream().mapToDouble(Double::doubleValue).sum();
+        return memberships.entrySet().stream()
+                .mapToDouble(entry -> entry.getValue() * frequencies.get(entry.getKey()))
+                .sum();
     }
 
     // Centroid defuzzification

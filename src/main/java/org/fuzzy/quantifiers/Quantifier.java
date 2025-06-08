@@ -34,29 +34,5 @@ public class Quantifier extends Summarizer {
             return fuzzySet.getMembership(r);
         }
     }
-
-    // Factory methods for common quantifiers
-    public static Quantifier most() {
-        Universe universe = new Universe(0.0, 1.0, true);
-        FuzzySet fuzzySet = new FuzzySet(universe, MembershipFunctions.triangular(0.25, 0.5, 1.));
-        return new Quantifier("OKOŁO POŁOWY", fuzzySet);
-    }
-
-    public static Quantifier few() {
-        Universe universe = new Universe(0.0, 1.0, true);
-        FuzzySet fuzzySet = new FuzzySet(universe, MembershipFunctions.trapezoidal(0.0, 0.0, 0.1, 0.3));
-        return new Quantifier("few", fuzzySet);
-    }
-
-    public static Quantifier about(double count) {
-        Universe universe = new Universe(0.0, count * 2, true);
-        FuzzySet fuzzySet = new FuzzySet(universe, MembershipFunctions.triangular(
-                Math.max(0, count - count * 0.3), count, count + count * 0.3));
-        return new Quantifier("about " + (int)count, fuzzySet, false);
-    }
-
-    public static Quantifier around(double count) {
-        return about(count); // Alias for about
-    }
 }
 

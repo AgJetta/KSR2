@@ -1,5 +1,6 @@
 package org.dataImport;
 
+import org.fuzzy.SongRecord;
 import org.fuzzy.quantifiers.Quantifier;
 import org.json.JSONObject;
 import org.json.JSONArray;
@@ -17,6 +18,8 @@ import java.util.Scanner;
 
 public class ConfigImporter {
 
+    private static List<SongRecord> dataset = new ArrayList<>();
+
     private static JSONObject loadConfig() {
         // Load config.json from resources
         InputStream input = ConfigImporter.class.getClassLoader().getResourceAsStream("org/dataLoader/config.json");
@@ -26,6 +29,9 @@ public class ConfigImporter {
         return config;
     }
 
+    public static void connectDataset(List<SongRecord> records) {
+        dataset = records;
+    }
     public static List<Quantifier> loadQuantifiersFromConfig() {
         List<Quantifier> quantifiers = new ArrayList<>();
 
