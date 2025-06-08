@@ -5,6 +5,9 @@ import org.fuzzy.membershipFunctions.MembershipFunctions;
 import org.fuzzy.summarizer.Summarizer;
 import org.fuzzy.summarizer.SummarizerFactory;
 
+import org.dataImport.ConfigImporter;
+import org.dataImport.CsvSongImporter;
+
 import java.util.ArrayList;
 import java.util.HashMap;
 import java.util.List;
@@ -14,7 +17,22 @@ import java.util.Map;
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        LinguisticSummaryExample.main(args);
+        // Create quantifiers
+        Quantifier most = Quantifier.most();
+        Quantifier few = Quantifier.few();
+        Quantifier aboutFive = Quantifier.about(5);
+
+
+        // Summarizer
+//        FuzzySet popularityFuzzy = new FuzzySet(
+//                new Universe(0., 100., true),
+//                MembershipFunctions.trapezoidal()
+//        )
+
+        // Create linguistic summaries
+//        LinguisticSummary summary1 = new LinguisticSummary(most, "songs", highEnergy);
+//        LinguisticSummary summary2 = new LinguisticSummary(few, "songs", fastTempo);
+//        LinguisticSummary summary3 = new LinguisticSummary(aboutFive, "songs", popular);
     }
 }
 

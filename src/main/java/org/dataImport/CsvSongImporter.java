@@ -1,4 +1,4 @@
-package org.dataLoader;
+package org.dataImport;
 
 import java.io.*;
 import java.util.*;
