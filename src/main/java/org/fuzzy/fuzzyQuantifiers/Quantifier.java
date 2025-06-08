@@ -38,8 +38,8 @@ public class Quantifier extends Summarizer {
     // Factory methods for common quantifiers
     public static Quantifier most() {
         Universe universe = new Universe(0.0, 1.0, true);
-        FuzzySet fuzzySet = new FuzzySet(universe, MembershipFunctions.trapezoidal(0.3, 0.8, 1.0, 1.0));
-        return new Quantifier("most", fuzzySet);
+        FuzzySet fuzzySet = new FuzzySet(universe, MembershipFunctions.triangular(0.25, 0.5, 1.));
+        return new Quantifier("OKOŁO POŁOWY", fuzzySet);
     }
 
     public static Quantifier few() {

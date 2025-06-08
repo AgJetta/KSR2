@@ -1,5 +1,6 @@
 package org.dataImport;
 
+import org.fuzzy.fuzzyQuantifiers.Quantifier;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import org.fuzzy.FuzzySet;
@@ -8,6 +9,7 @@ import org.fuzzy.membershipFunctions.MembershipFunction;
 import org.fuzzy.membershipFunctions.MembershipFunctions;
 import org.fuzzy.summarizer.Summarizer;
 
+import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -16,31 +18,33 @@ import java.util.Scanner;
 
 public class ConfigImporter {
 
-    public static List<Summarizer> loadSummarizersFromConfig() throws Exception {
+    private static JSONObject loadConfig() {
         // Load config.json from resources
         InputStream input = ConfigImporter.class.getClassLoader().getResourceAsStream("org/dataLoader/config.json");
         assert input != null;
         String jsonText = new Scanner(input, StandardCharsets.UTF_8).useDelimiter("\\A").next();
         JSONObject config = new JSONObject(jsonText);
+        return config;
+    }
 
-        List<Summarizer> summarizers = new ArrayList<>();
+    public static List<Quantifier> loadQuantifiersFromConfig() {
+        List<Quantifier> quantifiers = new ArrayList<>();
 
-        // Access variables and terms
-        JSONArray variables = config.getJSONArray("variables");
-        for (int i = 0; i < variables.length(); i++) {
-            JSONObject variable = variables.getJSONObject(i);
-            String variableName = variable.getString("name");
-            String variableDatabaseName = variable.getString("fieldName");
-            JSONArray universeArray = variable.getJSONArray("universe");
+        try {
+            JSONObject config = loadConfig();
 
-            JSONArray terms = variable.getJSONArray("terms");
-            for (int j = 0; j < terms.length(); j++) {
-                JSONObject term = terms.getJSONObject(j);
+            // Access variables and terms
+            JSONArray json_quantifiers = config.getJSONArray("quantifiers");
+            for (int i = 0; i < json_quantifiers.length(); i++) {
+                JSONObject quantifier = json_quantifiers.getJSONObject(i);
+                JSONArray universeArray = quantifier.getJSONArray("universe");
+
 
                 // Extract term properties
-                String termName = term.getString("name");
-                String functionType = term.getString("functionType");
-                JSONArray parametersArray = term.getJSONArray("parameters");
+                String quantifierName = quantifier.getString("name");
+                String functionType = quantifier.getString("functionType");
+                JSONArray parametersArray = quantifier.getJSONArray("parameters");
+                boolean isRelative = quantifier.getBoolean("relative");
 
                 // Create universe
                 double universeMin = universeArray.getDouble(0);
@@ -52,14 +56,64 @@ public class ConfigImporter {
 
                 // Create fuzzy set and summarizer
                 FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
-                Summarizer summarizer = new Summarizer(termName, variableDatabaseName, fuzzySet);
-                summarizers.add(summarizer);
+                Quantifier return_quantifier = new Quantifier(quantifierName, fuzzySet, isRelative);
+                quantifiers.add(return_quantifier);
 
-                System.out.println("Created summarizer: " + termName + " for field: " + variableDatabaseName);
+                System.out.println("Created quantifier: " + quantifierName);
             }
-        }
 
-        return summarizers;
+            return quantifiers;
+        } catch (Exception e) {
+            System.err.println("Error in loading quantifiers, none loaded: " + e.getMessage());
+            return quantifiers;
+        }
+    }
+
+    public static List<Summarizer> loadSummarizersFromConfig() {
+        List<Summarizer> summarizers = new ArrayList<>();
+
+        try {
+            JSONObject config = loadConfig();
+
+            // Access variables and terms
+            JSONArray variables = config.getJSONArray("variables");
+            for (int i = 0; i < variables.length(); i++) {
+                JSONObject variable = variables.getJSONObject(i);
+                String variableName = variable.getString("name");
+                String variableDatabaseName = variable.getString("fieldName");
+                JSONArray universeArray = variable.getJSONArray("universe");
+
+                JSONArray terms = variable.getJSONArray("terms");
+                for (int j = 0; j < terms.length(); j++) {
+                    JSONObject term = terms.getJSONObject(j);
+
+                    // Extract term properties
+                    String termName = term.getString("name");
+                    String functionType = term.getString("functionType");
+                    JSONArray parametersArray = term.getJSONArray("parameters");
+
+                    // Create universe
+                    double universeMin = universeArray.getDouble(0);
+                    double universeMax = universeArray.getDouble(1);
+                    Universe universe = new Universe(universeMin, universeMax, true);
+
+                    // Create membership function based on type
+                    MembershipFunction membershipFunction = createMembershipFunction(functionType, parametersArray);
+
+                    // Create fuzzy set and summarizer
+                    FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
+                    Summarizer summarizer = new Summarizer(termName, variableDatabaseName, fuzzySet);
+                    summarizers.add(summarizer);
+
+                    System.out.println("Created summarizer: " + termName + " for field: " + variableDatabaseName);
+                }
+            }
+
+            return summarizers;
+        } catch (Exception e) {
+            System.err.println("Error in loading summarizers, none loaded: " + e.getMessage());
+            return summarizers;
+        }
     }
 
     private static MembershipFunction createMembershipFunction(String functionType, JSONArray parameters) {

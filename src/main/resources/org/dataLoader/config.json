@@ -4,8 +4,16 @@
     {
       "name": "OKOŁO POŁOWY",
       "relative": true,
-      "functionType": "trianglar",
-      "parameters": [0.25, 0.5, 0.75]
+      "functionType": "triangular",
+      "parameters": [0.25, 0.5, 0.75],
+      "universe": [0, 1]
+    },
+    {
+      "name": "PRAWIE WSZYSTKIE",
+      "relative": true,
+      "functionType": "triangular",
+      "parameters": [0.8, 1.0, 2],
+      "universe": [0, 1]
     }
   ],
   "variables": [

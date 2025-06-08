@@ -33,7 +33,8 @@ public class LinguisticSummary {
     // Calculate T1 (degree of truth)
     public double calculateT1(List<SongRecord> dataset) {
         if (dataset.isEmpty()) {
-            return 0.0;
+            System.err.println("Can't calculate a measure for an empty dataset!");
+            System.exit(1);
         }
 
         // Calculate r - sum of membership degrees in summarizer
@@ -55,7 +56,7 @@ public class LinguisticSummary {
     // Generate summary with T1 value
     public String generateSummaryWithT1(List<SongRecord> dataset) {
         double t1 = calculateT1(dataset);
-        return String.format("%s (T1: %.3f)", generateSummary(), t1);
+        return String.format("%s (T1: %.7f)", generateSummary(), t1);
     }
 
     // TODO: Methods for future T-measures
