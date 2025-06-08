@@ -16,48 +16,58 @@ public class CsvSongImporter {
     // Only numeric fields that go into SongRecord
     private static final List<String> NUMERIC_FIELDS = HEADERS.subList(1, HEADERS.size());
 
-    public static List<SongRecord> importSongs(int maxRows) throws IOException {
-        InputStream inputStream = CsvSongImporter.class.getClassLoader()
-                .getResourceAsStream("org/dataLoader/data.csv");
-
-        if (inputStream == null) {
-            throw new IOException("Could not find data.csv in resources/org/dataLoader/");
-        }
-
+    public static List<SongRecord> importSongs(int maxRows) {
         List<SongRecord> songs = new ArrayList<>();
+        try {
+            InputStream inputStream = CsvSongImporter.class.getClassLoader()
+                    .getResourceAsStream("org/dataLoader/data.csv");
 
-        try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
-            // Skip header line
-            reader.readLine();
+            if (inputStream == null) {
+                throw new IOException("Could not find data.csv in resources/org/dataLoader/");
+            }
 
-            String line;
-            int rowCount = 0;
 
-            while ((line = reader.readLine()) != null && rowCount < maxRows) {
-                String[] values = line.split("\\s+");
+            try (BufferedReader reader = new BufferedReader(new InputStreamReader(inputStream))) {
+                // Skip header line
+                reader.readLine();
 
-                Map<String, Double> attributes = new LinkedHashMap<>();
+                String line;
+                int rowCount = 0;
 
-                // Map values to numeric fields maintaining order
-                for (int i = 0; i < HEADERS.size() && i < values.length; i++) {
-                    String fieldName = HEADERS.get(i);
-                    if (NUMERIC_FIELDS.contains(fieldName)) {
-                        try {
-                            double numericValue = Double.parseDouble(values[i]);
-                            attributes.put(fieldName, numericValue);
-                        } catch (NumberFormatException e) {
-                            System.err.println("Invalid number format for field '" + fieldName + "': " + values[i]);
-                            System.exit(1);
+                while ((line = reader.readLine()) != null && rowCount < maxRows) {
+                    String[] values = line.split("\\s+");
+
+                    Map<String, Double> attributes = new LinkedHashMap<>();
+
+                    // Map values to numeric fields maintaining order
+                    for (int i = 0; i < HEADERS.size() && i < values.length; i++) {
+                        String fieldName = HEADERS.get(i);
+                        if (NUMERIC_FIELDS.contains(fieldName)) {
+                            try {
+                                double numericValue = Double.parseDouble(values[i]);
+                                // Adjust loudness to be in [0, 61.125] instead of [-60, 1.125]
+                                if (fieldName.equals("loudness")) {
+                                    numericValue += 60;
+                                }
+                                attributes.put(fieldName, numericValue);
+                            } catch (NumberFormatException e) {
+                                System.err.println("Invalid number format for field '" + fieldName + "': " + values[i]);
+                                System.exit(1);
+                            }
                         }
                     }
+
+                    songs.add(new SongRecord(attributes));
+                    rowCount++;
                 }
-
-                songs.add(new SongRecord(attributes));
-                rowCount++;
             }
-        }
 
-        return songs;
+            return songs;
+        } catch (IOException e) {
+            System.err.println("Couldn't load the dataset: " + e.getMessage());
+            System.exit(1);
+            return songs;
+        }
     }
 
     public static void main(String[] args) {
@@ -77,7 +87,7 @@ public class CsvSongImporter {
                 System.out.println();
             }
 
-        } catch (IOException e) {
+        } catch (Exception e) {
             System.err.println("Error reading CSV file: " + e.getMessage());
         }
     }

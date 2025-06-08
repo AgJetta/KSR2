@@ -1,71 +1,54 @@
 package org.fuzzy;
 
 import org.fuzzy.fuzzyQuantifiers.Quantifier;
-import org.fuzzy.membershipFunctions.MembershipFunction;
 import org.fuzzy.membershipFunctions.MembershipFunctions;
 import org.fuzzy.summarizer.Summarizer;
 import org.fuzzy.summarizer.SummarizerFactory;
 
-import org.dataImport.ConfigImporter;
-import org.dataImport.CsvSongImporter;
-import org.json.JSONArray;
-import org.json.JSONObject;
-
-import java.io.InputStream;
-import java.nio.charset.StandardCharsets;
 import java.util.*;
+
+import static org.dataImport.ConfigImporter.loadQuantifiersFromConfig;
+import static org.dataImport.ConfigImporter.loadSummarizersFromConfig;
+import static org.dataImport.CsvSongImporter.importSongs;
+import static org.fuzzy.LinguisticSummaryExample.analyzeSummary;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class Main {
     public static void main(String[] args) {
-        // Load config.json from resources
-        InputStream input = ConfigImporter.class.getClassLoader().getResourceAsStream("org/dataLoader/config.json");
-        assert input != null;
-        String jsonText = new Scanner(input, StandardCharsets.UTF_8).useDelimiter("\\A").next();
-        JSONObject config = new JSONObject(jsonText);
+        List<Summarizer> summarizers = loadSummarizersFromConfig();
+        List<Quantifier> quantifiers = loadQuantifiersFromConfig();
 
-        // Access variables and terms
-        List<Summarizer> summarizers = new ArrayList<>();
-        JSONArray variables = config.getJSONArray("variables");
-        for (int i = 0; i < variables.length(); i++) {
-            JSONObject variable = variables.getJSONObject(i);
-            System.out.println("Variable: " + variable.getString("name"));
-
-            JSONArray terms = variable.getJSONArray("terms");
-            for (int j = 0; j < terms.length(); j++) {
-                JSONObject term = terms.getJSONObject(j);
-                System.out.println("  Term: " + term.getString("name"));
-                System.out.println("    Function: " + term.getString("functionType"));
-                System.out.println("    Parameters: " + term.getJSONArray("parameters"));
-
-//            Universe universe = new Universe(
-//                    term.getJSONArray("universe").get(0),
-//                    term.getJSONArray("universe").get(1),
-//                    true);
-//            MembershipFunction membershipFunction = MembershipFunctions. term.getString("functionType");
-//            FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
-//            Summarizer summarizer = new Summarizer(term.getString("name"), term.getString("fieldName"), fuzzySet);
-//            summarizers.add(summarizer);
-            }
-        }
+        System.out.println("Loaded " + summarizers.size() + " summarizers");
+        List<SongRecord> dataset = importSongs(30000);
 
         // Create quantifiers
-        Quantifier most = Quantifier.most();
-        Quantifier few = Quantifier.few();
-        Quantifier aboutFive = Quantifier.about(5);
-
-
-        // Summarizer
-//        FuzzySet popularityFuzzy = new FuzzySet(
-//                new Universe(0., 100., true),
-//                MembershipFunctions.trapezoidal()
-//        )
+//        Quantifier most = Quantifier.most();
+//        Quantifier few = Quantifier.few();
+//        Quantifier aboutFive = Quantifier.about(5);
 
         // Create linguistic summaries
 //        LinguisticSummary summary1 = new LinguisticSummary(most, "songs", highEnergy);
 //        LinguisticSummary summary2 = new LinguisticSummary(few, "songs", fastTempo);
 //        LinguisticSummary summary3 = new LinguisticSummary(aboutFive, "songs", popular);
+
+        System.out.println("=== Linguistic Summary with T1 ===");
+        for (Summarizer summarizer: summarizers){
+            for (Quantifier quantifier: quantifiers) {
+            LinguisticSummary summary = new LinguisticSummary(quantifier, "songs", summarizer);
+            System.out.println(summary.generateSummaryWithT1(dataset));
+            }
+        }
+        for (Summarizer summarizer: summarizers){
+            for (Quantifier quantifier: quantifiers) {
+                LinguisticSummary summary = new LinguisticSummary(quantifier, "songs", summarizer);
+
+                // Detailed analysis
+                System.out.println("\n=== Detailed Analysis ===");
+                analyzeSummary(summary, dataset);
+            }
+        }
+
     }
 }
 
@@ -129,19 +112,19 @@ class LinguisticSummaryExample {
         analyzeSummary(summary3, dataset);
     }
 
-    private static void analyzeSummary(LinguisticSummary summary, List<SongRecord> dataset) {
+    public static void analyzeSummary(LinguisticSummary summary, List<SongRecord> dataset) {
         System.out.println("\nSummary: " + summary.generateSummary());
 
         double r = summary.getSummarizer().calculateR(dataset);
         int m = dataset.size();
         double t1 = summary.calculateT1(dataset);
 
-        System.out.println("  Records matching summarizer (r): " + String.format("%.2f", r));
+        System.out.println("  Records matching summarizer (r): " + String.format("%.7f", r));
         System.out.println("  Total records (m): " + m);
         if (summary.getQuantifier().isRelative()) {
-            System.out.println("  Proportion (r/m): " + String.format("%.3f", r/m));
+            System.out.println("  Proportion (r/m): " + String.format("%.7f", r/m));
         }
-        System.out.println("  T1 (degree of truth): " + String.format("%.3f", t1));
+        System.out.println("  T1 (degree of truth): " + String.format("%.7f", t1));
     }
 
     // Create sample dataset for testing
