@@ -12,6 +12,7 @@ public class FuzzySet {
     private final Universe universe;
     private final Map<Double, Double> memberships;
     private final MembershipFunction membershipFunction;
+    private boolean isClassic = false; // Flag to indicate if this is a classic fuzzy set
 
     // Constructor for fuzzy set with explicit memberships
     public FuzzySet(Universe universe, MembershipFunction membershipFunction, Map<Double, Double> memberships) {
@@ -70,7 +71,9 @@ public class FuzzySet {
      * @return FuzzySet with full membership in the specified range and crisp membership function
      */
     public static FuzzySet classicSet(Universe universe, double start, double end) {
-        return new FuzzySet(universe, MembershipFunctions.crisp(start, end));
+        FuzzySet returnSet = new FuzzySet(universe, MembershipFunctions.crisp(start, end));
+        returnSet.setClassic(true); // Mark as classic set
+        return returnSet;
     }
 
     /** Factory method for classic fuzzy set with specific elements
@@ -87,7 +90,9 @@ public class FuzzySet {
         for (double x : elements) {
             memberships.put(x, 1.0);
         }
-        return new FuzzySet(universe, MembershipFunctions.crisp(start, end), memberships);
+        FuzzySet returnSet = new FuzzySet(universe, MembershipFunctions.crisp(start, end), memberships);
+        returnSet.setClassic(true); // Mark as classic set
+        return returnSet;
     }
 
     // Basic operations
@@ -209,30 +214,48 @@ public class FuzzySet {
     // Additional methods for linguistic summaries
 
     // Alpha-cut: returns crisp set of elements with membership >= alpha
-    public Set<Double> alphaCut(double alpha) {
+    public FuzzySet alphaCut(double alpha) {
         if (alpha < 0.0 || alpha > 1.0) {
             throw new IllegalArgumentException("Alpha must be in [0, 1]");
         }
+//        return memberships.entrySet().stream()
+//                .filter(entry -> entry.getValue() >= alpha)
+//                .map(Map.Entry::getKey)
+//                .collect(Collectors.toSet());
 
-        return memberships.entrySet().stream()
+        Set<Double> alphaMemberships = memberships.entrySet().stream()
                 .filter(entry -> entry.getValue() >= alpha)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
+
+        double minVal = universe.getStart();
+        double maxVal = universe.getEnd();
+        return FuzzySet.classicSet(universe, minVal, maxVal, alphaMemberships);
     }
 
     // Support: elements with membership > 0
-    public Set<Double> support() {
+    public FuzzySet support() {
         return alphaCut(Double.MIN_VALUE);
     }
 
     // Core: elements with membership = 1
-    public Set<Double> core() {
+    public FuzzySet core() {
         return alphaCut(1.0);
     }
 
     // Cardinality (sigma-count)
     public double cardinality() {
-        return memberships.values().stream().mapToDouble(Double::doubleValue).sum();
+        if (!isClassic) {
+            return memberships.values().stream().mapToDouble(Double::doubleValue).sum();
+        } else {
+            double minValueInMemberships = memberships.keySet().stream()
+                    .min(Double::compareTo)
+                    .orElseThrow(() -> new IllegalStateException("No elements in classic set"));
+            double maxValueInMemberships = memberships.keySet().stream()
+                    .max(Double::compareTo)
+                    .orElseThrow(() -> new IllegalStateException("No elements in classic set"));
+            return maxValueInMemberships - minValueInMemberships; // Classic set cardinality
+        }
     }
 
     // Centroid defuzzification
@@ -254,8 +277,9 @@ public class FuzzySet {
 
     // Placeholder methods for future T1-T11 measures
     public double degreeOfFuzziness() {
-        // TODO: Implement based on specific T-measure requirements
-        return 0.0;
+        double supportCardinality = support().cardinality();
+        double universeCardinality = universe.getEnd() - universe.getStart();
+        return (supportCardinality / universeCardinality);
     }
 
     public double specificity() {
@@ -287,5 +311,13 @@ public class FuzzySet {
                 "universe=" + universe +
                 ", memberships=" + memberships +
                 '}';
+    }
+
+    public boolean isClassic() {
+        return isClassic;
+    }
+
+    public void setClassic(boolean classic) {
+        isClassic = classic;
     }
 }
