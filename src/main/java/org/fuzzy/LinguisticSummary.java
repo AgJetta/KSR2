@@ -1,6 +1,6 @@
 package org.fuzzy;
 
-import org.fuzzy.fuzzyQuantifiers.Quantifier;
+import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summarizer.*;
 
 import java.util.*;

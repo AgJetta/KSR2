@@ -1,4 +1,4 @@
-package org.fuzzy.fuzzyQuantifiers;
+package org.fuzzy.quantifiers;
 
 import org.fuzzy.FuzzySet;
 

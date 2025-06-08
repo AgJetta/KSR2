@@ -1,6 +1,6 @@
 package org.dataImport;
 
-import org.fuzzy.fuzzyQuantifiers.Quantifier;
+import org.fuzzy.quantifiers.Quantifier;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import org.fuzzy.FuzzySet;
@@ -9,7 +9,6 @@ import org.fuzzy.membershipFunctions.MembershipFunction;
 import org.fuzzy.membershipFunctions.MembershipFunctions;
 import org.fuzzy.summarizer.Summarizer;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;

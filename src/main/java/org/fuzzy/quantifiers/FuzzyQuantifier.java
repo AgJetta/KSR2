@@ -1,4 +1,4 @@
-package org.fuzzy.fuzzyQuantifiers;
+package org.fuzzy.quantifiers;
 
 public class FuzzyQuantifier {
     private String name;
