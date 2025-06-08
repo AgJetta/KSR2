@@ -45,6 +45,18 @@ public class LinguisticSummary {
         return quantifier.getMembership(r, m);
     }
 
+    public double calculateT2(List<SongRecord> dataset){
+        if (dataset.isEmpty()) {
+            System.err.println("Can't calculate a measure for an empty dataset!");
+            System.exit(1);
+        }
+
+        double summarizerFuzziness = summarizer.getFuzzySet().degreeOfFuzziness();
+        double product = Math.pow(summarizerFuzziness, 1); // placeholder for future compund summarizer
+
+        return (1 - product);
+    }
+
     // Generate natural language summary
     public String generateSummary() {
         return String.format("%s %s are/have %s",
@@ -54,15 +66,10 @@ public class LinguisticSummary {
     }
 
     // Generate summary with T1 value
-    public String generateSummaryWithT1(List<SongRecord> dataset) {
+    public String generateSummaryWithMeasures(List<SongRecord> dataset) {
         double t1 = calculateT1(dataset);
-        return String.format("%s (T1: %.7f)", generateSummary(), t1);
-    }
-
-    // TODO: Methods for future T-measures
-    public double calculateT2(List<SongRecord> dataset) {
-        // TODO: Implement degree of imprecision
-        return 0.0;
+        double t2 = calculateT2(dataset);
+        return String.format("%s" + "(T1: %.7f) (T2: %.7f)", generateSummary(), t1, t2);
     }
 
     public double calculateT3(List<SongRecord> dataset) {
@@ -81,6 +88,7 @@ public class LinguisticSummary {
     public String toString() {
         return generateSummary();
     }
+
 }
 
 // Example usage and testing

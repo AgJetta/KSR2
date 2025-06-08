@@ -36,7 +36,7 @@ public class Main {
         for (Summarizer summarizer: summarizers){
             for (Quantifier quantifier: quantifiers) {
             LinguisticSummary summary = new LinguisticSummary(quantifier, "songs", summarizer);
-            System.out.println(summary.generateSummaryWithT1(dataset));
+            System.out.println(summary.generateSummaryWithMeasures(dataset));
             }
         }
         for (Summarizer summarizer: summarizers){
@@ -101,9 +101,9 @@ class LinguisticSummaryExample {
 
         // Test summaries
         System.out.println("=== Linguistic Summaries with T1 ===");
-        System.out.println(summary1.generateSummaryWithT1(dataset));
-        System.out.println(summary2.generateSummaryWithT1(dataset));
-        System.out.println(summary3.generateSummaryWithT1(dataset));
+        System.out.println(summary1.generateSummaryWithMeasures(dataset));
+        System.out.println(summary2.generateSummaryWithMeasures(dataset));
+        System.out.println(summary3.generateSummaryWithMeasures(dataset));
 
         // Detailed analysis
         System.out.println("\n=== Detailed Analysis ===");
