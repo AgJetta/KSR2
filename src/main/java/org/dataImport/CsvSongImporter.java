@@ -45,6 +45,10 @@ public class CsvSongImporter {
                         if (NUMERIC_FIELDS.contains(fieldName)) {
                             try {
                                 double numericValue = Double.parseDouble(values[i]);
+                                // Adjust loudness to be in [0, 61.125] instead of [-60, 1.125]
+                                if (fieldName.equals("loudness")) {
+                                    numericValue += 60;
+                                }
                                 attributes.put(fieldName, numericValue);
                             } catch (NumberFormatException e) {
                                 System.err.println("Invalid number format for field '" + fieldName + "': " + values[i]);
