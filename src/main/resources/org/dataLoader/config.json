@@ -1,8 +1,11 @@
 {
   "functionTypes": [
     "triangle",
-    "gauss",
-    "trapezoid"
+    "gaussian",
+    "trapezoid",
+    "crisp",
+    "rampUp",
+    "rampDown"
   ],
   "quantifiers": [
     {
@@ -46,6 +49,20 @@
         0,
         1
       ]
+    },
+    {
+    "name": "MNIEJ NIŻ 100",
+    "relative": false,
+    "functionType": "trapezoidal",
+    "parameters": [0, 0, 95, 100],
+    "universe": [0, 10000]
+    },
+    {
+      "name": "WIĘCEJ NIŻ 1000",
+      "relative": false,
+      "functionType": "trapezoidal",
+      "parameters": [1000, 1050, 10000, 10000],
+      "universe": [0, 10000]
     }
   ],
   "variables": [
