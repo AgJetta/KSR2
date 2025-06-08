@@ -4,27 +4,29 @@
     {
       "name": "OKOŁO POŁOWY",
       "relative": true,
-      "functionType": "triangle",
+      "functionType": "trianglar",
       "parameters": [0.25, 0.5, 0.75]
     }
   ],
   "variables": [
     {
       "name": "Popularność",
+      "fieldName": "track_popularity",
+      "universe": [0, 100],
       "terms": [
         {
           "name": "Nisza",
-          "functionType": "trapezoid",
+          "functionType": "trapezoidal",
           "parameters": [-2, 0, 20, 40]
         },
         {
           "name": "Mainstream",
-          "functionType": "trapezoid",
+          "functionType": "trapezoidal",
           "parameters": [20, 40, 60, 80]
         },
         {
           "name": "Hit",
-          "functionType": "trapezoid",
+          "functionType": "trapezoidal",
           "parameters": [60, 80, 100, 102]
         }
       ]
