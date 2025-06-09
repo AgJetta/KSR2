@@ -28,7 +28,7 @@ public class DevMain {
         System.out.println("=== Linguistic Summaries===");
         for (Summarizer summarizer: summarizers){
             for (Quantifier quantifier: quantifiers) {
-            LinguisticSummary summary = new LinguisticSummary(quantifier, "songs", summarizer);
+            LinguisticSummary summary = new LinguisticSummary(quantifier, "utworów", summarizer);
             System.out.println(summary.generateSummaryWithMeasures(dataset));
             }
         }
@@ -42,7 +42,7 @@ public class DevMain {
             for (Summarizer qualifier: summarizers) {
                 if (qualifier.equals(summarizer)) continue; // Skip self-qualifying
                 LinguisticSummary secondOrderSummary = new SecondOrderLinguisticSummary(
-                        one_third, "songs", summarizer, qualifier);
+                        one_third, "utworów", summarizer, qualifier);
                 System.out.println(secondOrderSummary.generateSummaryWithMeasures(dataset));
             }
         }
@@ -93,9 +93,9 @@ class LinguisticSummaryExample {
         Quantifier aboutFive = Quantifier.about(5);
 
         // Create linguistic summaries
-        LinguisticSummary summary1 = new LinguisticSummary(most, "songs", highEnergy);
-        LinguisticSummary summary2 = new LinguisticSummary(few, "songs", fastTempo);
-        LinguisticSummary summary3 = new LinguisticSummary(aboutFive, "songs", popular);
+        LinguisticSummary summary1 = new LinguisticSummary(most, "utworów", highEnergy);
+        LinguisticSummary summary2 = new LinguisticSummary(few, "utworów", fastTempo);
+        LinguisticSummary summary3 = new LinguisticSummary(aboutFive, "utworów", popular);
 
         // Test summaries
         System.out.println("=== Linguistic Summaries with T1 ===");

@@ -102,6 +102,7 @@ public class ConfigImporter {
                     // Create fuzzy set and summarizer
                     FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
                     Summarizer summarizer = new Summarizer(termName, variableDatabaseName, fuzzySet);
+                    summarizer.linguisiticVariable = variableName;
                     summarizers.add(summarizer);
 
 //                    System.out.println("Created summarizer: " + termName + " for field: " + variableDatabaseName);

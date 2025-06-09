@@ -169,7 +169,7 @@ public class ConsoleInterface {
         System.out.println("\nGenerowanie podsumowań lingwistycznych:");
 
         for (Summarizer summ : selectedSummarizers) {
-            LinguisticSummary ls = new LinguisticSummary(selectedQuantifier, "songs", summ);
+            LinguisticSummary ls = new LinguisticSummary(selectedQuantifier, "utworów", summ);
             double truthDegree = ls.calculateT1(dataset);
             String summaryText = ls.generateSummary();
 

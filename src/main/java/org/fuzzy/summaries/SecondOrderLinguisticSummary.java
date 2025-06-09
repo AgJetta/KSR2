@@ -54,7 +54,11 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
     @Override
     public double calculateT10(List<SongRecord> dataset) {
         // Right now does not support Compound Summarizers (Qualifiers)
-        double qualifierCardinality = qualifier.getFuzzySet().cardinality();
+        double qualifierCardinality = 0.0;
+        for (SongRecord record : dataset) {
+            double membership = qualifier.getFuzzySet().getMembership(record.getAttribute(qualifier.getName()));
+            qualifierCardinality += membership;
+        }
         Universe universe = qualifier.getFuzzySet().getUniverse();
         double universeSize = universe.getLength();
         double ratio = qualifierCardinality / universeSize;
@@ -64,10 +68,12 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
 
     @Override
     public String generateSummary() {
-        return String.format("%s %s that are/having %s are/have %s",
+        return String.format("%s %s które są/mają [%s %s] są/mają [%s %s]",
                 quantifier.getName(),
                 predicate,
                 qualifier.getName(),
-                summarizer.getName());
+                qualifier.linguisiticVariable,
+                summarizer.getName(),
+                summarizer.linguisiticVariable);
     }
 }

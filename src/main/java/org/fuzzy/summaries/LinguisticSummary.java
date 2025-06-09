@@ -75,10 +75,12 @@ public class LinguisticSummary {
 
     // Generate natural language summary
     public String generateSummary() {
-        return String.format("%s %s are/have %s",
+        return String.format("%s %s są/mają [%s %s]",
                 quantifier.getName(),
                 predicate,
-                summarizer.getName());
+                summarizer.getName(),
+                summarizer.linguisiticVariable
+        );
     }
 
     // Generate summary with T1 value
@@ -114,7 +116,11 @@ public class LinguisticSummary {
 
     public double calculateT7(List<SongRecord> dataset) {
         // How cardinality of a quantifier is supposed to be less than 1 ??!!!
-        double quantifierCardinality = quantifier.getFuzzySet().cardinality();
+        double quantifierCardinality = 0.0;
+        for (SongRecord record : dataset) {
+            double membership = quantifier.getFuzzySet().getMembership(record.getAttribute(quantifier.getName()));
+            quantifierCardinality += membership;
+        }
         Universe universe = quantifier.getFuzzySet().getUniverse();
         double universeSize = universe.getLength();
 
@@ -122,7 +128,11 @@ public class LinguisticSummary {
     }
 
     public double calculateT8(List<SongRecord> dataset) {
-        double summarizerCardinality = summarizer.getFuzzySet().cardinality();
+        double summarizerCardinality = 0.0;
+        for (SongRecord record : dataset) {
+            double membership = summarizer.getFuzzySet().getMembership(record.getAttribute(summarizer.getName()));
+            summarizerCardinality += membership;
+        }
         Universe universe = summarizer.getFuzzySet().getUniverse();
         double universeSize = universe.getLength();
         return 1 - (summarizerCardinality / universeSize);

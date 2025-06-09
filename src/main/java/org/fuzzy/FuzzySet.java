@@ -25,9 +25,6 @@ public class FuzzySet {
             double x = entry.getKey();
             double membership = entry.getValue();
 
-//            if (!universe.contains(x)) {
-//                throw new IllegalArgumentException("Element " + x + " not in universe");
-//            }
             if (membership < 0.0 || membership > 1.0) {
                 throw new IllegalArgumentException("Membership must be in [0, 1]");
             }
