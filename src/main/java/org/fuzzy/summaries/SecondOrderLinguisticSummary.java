@@ -24,15 +24,25 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
         }
 
         // Calculate r - sum of membership degrees in summarizer
-        FuzzySet fuzzySet = summarizer.getFuzzySet().intersection(
+        FuzzySet intersection = summarizer.getFuzzySet().intersection(
                 qualifier.getFuzzySet());
-        double upperSum = fuzzySet.cardinality();
+        double upperSum = intersection.cardinality();
         double lowerSum = qualifier.getFuzzySet().cardinality();
         double r = upperSum / lowerSum;
 
         // Calculate quantifier membership based on r and m
         return quantifier.getMembership(r, 1);
     }
+
+    @Override
+    public double calculateT3(List<SongRecord> dataset){
+        FuzzySet intersection = summarizer.getFuzzySet().intersection(
+                qualifier.getFuzzySet());
+        double t = intersection.support().cardinality();
+        double h = dataset.size();
+        return t / h;
+    }
+
     @Override
     public String generateSummary() {
         return String.format("%s %s that are/having %s are/have %s",
@@ -46,6 +56,8 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
     public String generateSummaryWithMeasures(List<SongRecord> dataset) {
         double t1 = calculateT1(dataset);
         double t2 = calculateT2(dataset);
-        return String.format("%s" + "(T1: %.7f) (T2: %.7f)", generateSummary(), t1, t2);
+        double t3 = calculateT3(dataset);
+        double t4 = calculateT4(dataset);
+        return String.format("%s" + "(T1: %.7f | T2: %.7f | T3: %.7f | T4: %.7f", generateSummary(), t1, t2, t3, t4);
     }
 }

@@ -58,7 +58,7 @@ public class ConfigImporter {
                 Quantifier return_quantifier = new Quantifier(quantifierName, fuzzySet, isRelative);
                 quantifiers.add(return_quantifier);
 
-                System.out.println("Created quantifier: " + quantifierName);
+//                System.out.println("Created quantifier: " + quantifierName);
             }
 
             return quantifiers;
@@ -104,7 +104,7 @@ public class ConfigImporter {
                     Summarizer summarizer = new Summarizer(termName, variableDatabaseName, fuzzySet);
                     summarizers.add(summarizer);
 
-                    System.out.println("Created summarizer: " + termName + " for field: " + variableDatabaseName);
+//                    System.out.println("Created summarizer: " + termName + " for field: " + variableDatabaseName);
                 }
             }
 

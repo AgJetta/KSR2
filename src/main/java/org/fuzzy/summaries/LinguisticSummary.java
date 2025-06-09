@@ -52,10 +52,18 @@ public class LinguisticSummary {
             System.exit(1);
         }
 
+        // Jak dla Second Order???
         double summarizerFuzziness = summarizer.getFuzzySet().degreeOfFuzziness();
-        double product = Math.pow(summarizerFuzziness, 1); // placeholder for future compund summarizer
+        double product = Math.pow(summarizerFuzziness, 1); // placeholder for future compound summarizer
 
         return (1 - product);
+    }
+
+    public double calculateT3(List<SongRecord> dataset){
+        double t = summarizer.getFuzzySet().support().cardinality();
+        double h = dataset.size();
+
+        return t / h;
     }
 
     // Generate natural language summary
@@ -70,17 +78,16 @@ public class LinguisticSummary {
     public String generateSummaryWithMeasures(List<SongRecord> dataset) {
         double t1 = calculateT1(dataset);
         double t2 = calculateT2(dataset);
-        return String.format("%s" + "(T1: %.7f) (T2: %.7f)", generateSummary(), t1, t2);
-    }
-
-    public double calculateT3(List<SongRecord> dataset) {
-        // TODO: Implement degree of covering
-        return 0.0;
+        double t3 = calculateT3(dataset);
+        double t4 = calculateT4(dataset);
+        return String.format("%s" + "(T1: %.7f | T2: %.7f | T3: %.7f | T4: %.7f", generateSummary(), t1, t2, t3, t4);
     }
 
     public double calculateT4(List<SongRecord> dataset) {
-        // TODO: Implement degree of appropriateness
-        return 0.0;
+        double t = summarizer.getFuzzySet().support().cardinality();
+        double h = dataset.size();
+
+        return (t / h) - calculateT3(dataset);
     }
 
     // TODO: T5-T11 placeholder methods

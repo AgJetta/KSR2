@@ -245,6 +245,10 @@ public class FuzzySet {
         if (!isClassic) {
             return memberships.values().stream().mapToDouble(Double::doubleValue).sum();
         } else {
+            if (memberships.isEmpty()) {
+               return 0.0; // Classic set cardinality is zero if no memberships
+            }
+
             double minValueInMemberships = memberships.keySet().stream()
                     .min(Double::compareTo)
                     .orElseThrow(() -> new IllegalStateException("No elements in classic set"));

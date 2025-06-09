@@ -19,6 +19,7 @@ import static org.fuzzy.LinguisticSummaryExample.analyzeSummary;
 public class Main {
     public static void main(String[] args) {
         List<Summarizer> summarizers = loadSummarizersFromConfig();
+        summarizers = summarizers.subList(0, 7);
         List<Quantifier> quantifiers = loadQuantifiersFromConfig();
 
         System.out.println("Loaded " + summarizers.size() + " summarizers");
