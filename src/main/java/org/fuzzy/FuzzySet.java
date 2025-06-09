@@ -25,9 +25,9 @@ public class FuzzySet {
             double x = entry.getKey();
             double membership = entry.getValue();
 
-            if (!universe.contains(x)) {
-                throw new IllegalArgumentException("Element " + x + " not in universe");
-            }
+//            if (!universe.contains(x)) {
+//                throw new IllegalArgumentException("Element " + x + " not in universe");
+//            }
             if (membership < 0.0 || membership > 1.0) {
                 throw new IllegalArgumentException("Membership must be in [0, 1]");
             }
@@ -193,9 +193,6 @@ public class FuzzySet {
     }
 
     public FuzzySet intersection(FuzzySet other) {
-        if (!this.universe.equals(other.universe)) {
-            throw new IllegalArgumentException("Sets must have the same universe");
-        }
 
         Map<Double, Double> newMemberships = new HashMap<>();
         Set<Double> allKeys = new HashSet<>(this.memberships.keySet());

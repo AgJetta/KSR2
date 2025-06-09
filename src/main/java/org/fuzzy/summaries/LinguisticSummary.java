@@ -1,5 +1,6 @@
-package org.fuzzy;
+package org.fuzzy.summaries;
 
+import org.fuzzy.SongRecord;
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summarizer.*;
 
@@ -8,9 +9,9 @@ import java.util.*;
 
 // First-order linguistic summary
 public class LinguisticSummary {
-    private final Quantifier quantifier;
-    private final String predicate;
-    private final Summarizer summarizer;
+    protected final Quantifier quantifier;
+    protected final String predicate;
+    protected final Summarizer summarizer;
 
     public LinguisticSummary(Quantifier quantifier, String predicate, Summarizer summarizer) {
         this.quantifier = quantifier;

@@ -2,6 +2,8 @@ package org.fuzzy;
 
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.membershipFunctions.MembershipFunctions;
+import org.fuzzy.summaries.LinguisticSummary;
+import org.fuzzy.summaries.SecondOrderLinguisticSummary;
 import org.fuzzy.summarizer.Summarizer;
 import org.fuzzy.summarizer.SummarizerFactory;
 
@@ -22,30 +24,25 @@ public class Main {
         System.out.println("Loaded " + summarizers.size() + " summarizers");
         List<SongRecord> dataset = importSongs(30000);
 
-        // Create quantifiers
-//        Quantifier most = Quantifier.most();
-//        Quantifier few = Quantifier.few();
-//        Quantifier aboutFive = Quantifier.about(5);
-
-        // Create linguistic summaries
-//        LinguisticSummary summary1 = new LinguisticSummary(most, "songs", highEnergy);
-//        LinguisticSummary summary2 = new LinguisticSummary(few, "songs", fastTempo);
-//        LinguisticSummary summary3 = new LinguisticSummary(aboutFive, "songs", popular);
-
-        System.out.println("=== Linguistic Summary with T1 ===");
+        System.out.println("=== Linguistic Summaries===");
         for (Summarizer summarizer: summarizers){
             for (Quantifier quantifier: quantifiers) {
             LinguisticSummary summary = new LinguisticSummary(quantifier, "songs", summarizer);
             System.out.println(summary.generateSummaryWithMeasures(dataset));
             }
         }
-        for (Summarizer summarizer: summarizers){
-            for (Quantifier quantifier: quantifiers) {
-                LinguisticSummary summary = new LinguisticSummary(quantifier, "songs", summarizer);
 
-                // Detailed analysis
-                System.out.println("\n=== Detailed Analysis ===");
-                analyzeSummary(summary, dataset);
+        Quantifier one_third = quantifiers.stream()
+                .filter(q -> q.getName().equals("JEDNA TRZECIA (1/3)"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Quantifier 'one third' not found"));
+        System.out.println("\n=== Second Order Summaries ===");
+        for (Summarizer summarizer: summarizers){
+            for (Summarizer qualifier: summarizers) {
+                if (qualifier.equals(summarizer)) continue; // Skip self-qualifying
+                LinguisticSummary secondOrderSummary = new SecondOrderLinguisticSummary(
+                        one_third, "songs", summarizer, qualifier);
+                System.out.println(secondOrderSummary.generateSummaryWithMeasures(dataset));
             }
         }
 
