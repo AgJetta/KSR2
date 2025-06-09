@@ -14,7 +14,7 @@ import static org.fuzzy.LinguisticSummaryExample.analyzeSummary;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
-public class Main {
+public class DevMain {
     public static void main(String[] args) {
         List<Summarizer> summarizers = loadSummarizersFromConfig();
         List<Quantifier> quantifiers = loadQuantifiersFromConfig();
