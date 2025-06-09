@@ -34,45 +34,4 @@ public class Quantifier extends Summarizer {
             return fuzzySet.getMembership(r);
         }
     }
-
-    // Factory methods for common quantifiers
-    public static Quantifier most() {
-        Universe universe = new Universe(0.0, 1.0, true);
-        FuzzySet fuzzySet = new FuzzySet(universe, MembershipFunctions.triangular(0.25, 0.5, 1.));
-        return new Quantifier("OKOŁO POŁOWY", fuzzySet);
-    }
-
-    public static Quantifier few() {
-        Universe universe = new Universe(0.0, 1.0, true);
-        FuzzySet fuzzySet = new FuzzySet(universe, MembershipFunctions.trapezoidal(0.0, 0.0, 0.1, 0.3));
-        return new Quantifier("few", fuzzySet);
-    }
-
-    public static Quantifier about(double count) {
-        Universe universe = new Universe(0.0, count * 2, true);
-        FuzzySet fuzzySet = new FuzzySet(universe, MembershipFunctions.triangular(
-                Math.max(0, count - count * 0.3), count, count + count * 0.3));
-        return new Quantifier("about " + (int) count, fuzzySet, false);
-    }
-
-    public static Quantifier around(double count) {
-        return about(count); // Alias for about
-    }
-
-
-    // Factory methods for absolute qualifiers:
-
-    public static Quantifier moreThan(double threshold, double maxExpectedCount) {
-        Universe universe = new Universe(0.0, maxExpectedCount, true);
-        FuzzySet fuzzySet = new FuzzySet(universe,
-                MembershipFunctions.trapezoidal(threshold, threshold + 0.05 * maxExpectedCount, maxExpectedCount, maxExpectedCount));
-        return new Quantifier("więcej niż " + threshold, fuzzySet, false);
-    }
-
-    public static Quantifier lessThan(double threshold, double maxExpectedCount) {
-        Universe universe = new Universe(0.0, maxExpectedCount, true);
-        FuzzySet fuzzySet = new FuzzySet(universe,
-                MembershipFunctions.trapezoidal(0.0, 0.0, threshold - 0.05 * maxExpectedCount, threshold));
-        return new Quantifier("mniej niż " + threshold, fuzzySet, false);
-    }
 }
