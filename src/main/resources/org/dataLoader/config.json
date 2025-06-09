@@ -493,40 +493,40 @@
             0.6,
             1.0
           ]
+        }
+      ]
+    },
+    {
+      "name": "Energia",
+      "fieldName": "energia",
+      "universe": [
+        0.0,
+        1.0
+      ],
+      "terms": [
+        {
+          "name": "Uspokajająca",
+          "functionType": "crisp",
+          "parameters": [
+            0.0,
+            0.3
+          ]
         },
         {
-          "name": "Energia",
-          "fieldName": "energia",
-          "universe": [
-            0.0,
+          "name": "Orzeźwiająca",
+          "functionType": "triangular",
+          "parameters": [
+            0.25,
+            0.5,
+            0.75
+          ]
+        },
+        {
+          "name": "Bardzo Energiczna",
+          "functionType": "crisp",
+          "parameters": [
+            0.7,
             1.0
-          ],
-          "terms": [
-            {
-              "name": "Uspokajająca",
-              "functionType": "crisp",
-              "parameters": [
-                0.0,
-                0.3
-              ]
-            },
-            {
-              "name": "Orzeźwiająca",
-              "functionType": "triangular",
-              "parameters": [
-                0.25,
-                0.5,
-                0.75
-              ]
-            },
-            {
-              "name": "Bardzo Energiczna",
-              "functionType": "crisp",
-              "parameters": [
-                0.7,
-                1.0
-              ]
-            }
           ]
         }
       ]
