@@ -157,8 +157,6 @@ public class FuzzySet {
             for (Map.Entry<Double, Double> entry : memberships.entrySet()) {
                 newMemberships.put(entry.getKey(), 1.0 - entry.getValue());
             }
-            // Add points not in original set with membership 1.0
-            // This is simplified - in practice you'd need more sophisticated handling
         } else {
             // For discrete universe, evaluate complement for all points
             for (double x : universe.getDiscretePoints()) {
@@ -211,10 +209,6 @@ public class FuzzySet {
         if (alpha < 0.0 || alpha > 1.0) {
             throw new IllegalArgumentException("Alpha must be in [0, 1]");
         }
-//        return memberships.entrySet().stream()
-//                .filter(entry -> entry.getValue() >= alpha)
-//                .map(Map.Entry::getKey)
-//                .collect(Collectors.toSet());
 
         Set<Double> alphaMemberships = memberships.entrySet().stream()
                 .filter(entry -> entry.getValue() >= alpha)
@@ -277,16 +271,6 @@ public class FuzzySet {
         double supportCardinality = support().cardinality();
         double universeCardinality = universe.getEnd() - universe.getStart();
         return (supportCardinality / universeCardinality);
-    }
-
-    public double specificity() {
-        // TODO: Implement based on specific T-measure requirements
-        return 0.0;
-    }
-
-    public double similarity(FuzzySet other) {
-        // TODO: Implement similarity measure
-        return 0.0;
     }
 
     @Override

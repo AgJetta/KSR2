@@ -53,7 +53,6 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
 
     @Override
     public double calculateT10(List<SongRecord> dataset) {
-        // Right now does not support Compound Summarizers (Qualifiers)
         double qualifierCardinality = 0.0;
         for (SongRecord record : dataset) {
             double membership = qualifier.getFuzzySet().getMembership(record.getAttribute(qualifier.getName()));
