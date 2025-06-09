@@ -51,13 +51,4 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
                 qualifier.getName(),
                 summarizer.getName());
     }
-
-    @Override
-    public String generateSummaryWithMeasures(List<SongRecord> dataset) {
-        double t1 = calculateT1(dataset);
-        double t2 = calculateT2(dataset);
-        double t3 = calculateT3(dataset);
-        double t4 = calculateT4(dataset);
-        return String.format("%s" + "(T1: %.7f | T2: %.7f | T3: %.7f | T4: %.7f", generateSummary(), t1, t2, t3, t4);
-    }
 }

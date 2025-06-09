@@ -44,7 +44,6 @@ public class FuzzySet {
 
         if (universe.isDense()) {
             // For dense universe, we need to sample points
-            // This is a simplified approach - in practice you might want more sophisticated sampling
             double step = universe.getLength() / 1000.0; // Sample 1000 points
             for (double x = universe.getStart(); x <= universe.getEnd(); x += step) {
                 double membership = this.membershipFunction.apply(x);

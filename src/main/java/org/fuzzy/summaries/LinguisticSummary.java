@@ -1,6 +1,7 @@
 package org.fuzzy.summaries;
 
 import org.fuzzy.SongRecord;
+import org.fuzzy.Universe;
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summarizer.*;
 
@@ -66,6 +67,12 @@ public class LinguisticSummary {
         return t / h;
     }
 
+    public double calculateT5(List<SongRecord> dataset){
+        double base = (1./2.);
+        double exponent = Math.pow(base, 1);
+        return 2 * exponent;
+    }
+
     // Generate natural language summary
     public String generateSummary() {
         return String.format("%s %s are/have %s",
@@ -80,7 +87,11 @@ public class LinguisticSummary {
         double t2 = calculateT2(dataset);
         double t3 = calculateT3(dataset);
         double t4 = calculateT4(dataset);
-        return String.format("%s" + "(T1: %.7f | T2: %.7f | T3: %.7f | T4: %.7f", generateSummary(), t1, t2, t3, t4);
+        double t5 = calculateT5(dataset);
+        double t6 = calculateT6(dataset);
+        double t7 = calculateT7(dataset);
+        return String.format("%s" + "(T1: %.7f | T2: %.7f | T3: %.7f | T4: %.7f | T5: %.7f | T6: %.7f | T7: %.7f)",
+                generateSummary(), t1, t2, t3, t4, t5, t6, t7);
     }
 
     public double calculateT4(List<SongRecord> dataset) {
@@ -90,7 +101,24 @@ public class LinguisticSummary {
         return (t / h) - calculateT3(dataset);
     }
 
-    // TODO: T5-T11 placeholder methods
+    public double calculateT6(List<SongRecord> dataset) {
+        double quantifierSupportCardinality = quantifier.getFuzzySet().support().cardinality();
+        Universe universe = quantifier.getFuzzySet().getUniverse();
+        double universeSize = universe.getLength();
+
+        return 1 - (quantifierSupportCardinality / universeSize);
+    }
+
+    public double calculateT7(List<SongRecord> dataset) {
+        // How cardinality of a quantifier is supposed to be less than 1 ??!!!
+        double quantifierCardinality = quantifier.getFuzzySet().cardinality();
+        Universe universe = quantifier.getFuzzySet().getUniverse();
+        double universeSize = universe.getLength();
+
+        return 1 - (quantifierCardinality / universeSize);
+    }
+
+
 
     @Override
     public String toString() {
