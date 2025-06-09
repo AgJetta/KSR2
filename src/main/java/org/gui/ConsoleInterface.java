@@ -2,7 +2,7 @@ package org.gui;
 
 import org.dataImport.ConfigImporter;
 import org.dataImport.CsvSongImporter;
-import org.fuzzy.LinguisticSummary;
+import org.fuzzy.summaries.LinguisticSummary;
 import org.fuzzy.SongRecord;
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summarizer.Summarizer;

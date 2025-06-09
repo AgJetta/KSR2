@@ -2,6 +2,7 @@ package org.fuzzy.summaries;
 
 import org.fuzzy.FuzzySet;
 import org.fuzzy.SongRecord;
+import org.fuzzy.Universe;
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summarizer.Summarizer;
 
@@ -41,6 +42,24 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
         double t = intersection.support().cardinality();
         double h = dataset.size();
         return t / h;
+    }
+
+    @Override
+    public double calculateT9(List<SongRecord> dataset) {
+        // Right now does not support Compound Summarizers (Qualifiers)
+        double product = qualifier.getFuzzySet().degreeOfFuzziness();
+        return 1 - product;
+    }
+
+    @Override
+    public double calculateT10(List<SongRecord> dataset) {
+        // Right now does not support Compound Summarizers (Qualifiers)
+        double qualifierCardinality = qualifier.getFuzzySet().cardinality();
+        Universe universe = qualifier.getFuzzySet().getUniverse();
+        double universeSize = universe.getLength();
+        double ratio = qualifierCardinality / universeSize;
+
+        return 1 - ratio;
     }
 
     @Override

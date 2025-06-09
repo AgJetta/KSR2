@@ -90,8 +90,11 @@ public class LinguisticSummary {
         double t5 = calculateT5(dataset);
         double t6 = calculateT6(dataset);
         double t7 = calculateT7(dataset);
-        return String.format("%s" + "(T1: %.7f | T2: %.7f | T3: %.7f | T4: %.7f | T5: %.7f | T6: %.7f | T7: %.7f)",
-                generateSummary(), t1, t2, t3, t4, t5, t6, t7);
+        double t8 = calculateT8(dataset);
+        double t9 = calculateT9(dataset);
+        double t10 = calculateT10(dataset);
+        return String.format("%s" + "(T1: %.7f | T2: %.7f | T3: %.7f | T4: %.7f | T5: %.7f | T6: %.7f | T7: %.7f | T8: %.7f | T9: %.7f | T10: %.7f)",
+                generateSummary(), t1, t2, t3, t4, t5, t6, t7, t8, t9, t10);
     }
 
     public double calculateT4(List<SongRecord> dataset) {
@@ -117,6 +120,23 @@ public class LinguisticSummary {
 
         return 1 - (quantifierCardinality / universeSize);
     }
+
+    public double calculateT8(List<SongRecord> dataset) {
+        double summarizerCardinality = summarizer.getFuzzySet().cardinality();
+        Universe universe = summarizer.getFuzzySet().getUniverse();
+        double universeSize = universe.getLength();
+        return 1 - (summarizerCardinality / universeSize);
+    }
+
+    public double calculateT9(List<SongRecord> dataset) {
+        return 0.0; // First-order summary doesn't have a qualifier
+    }
+
+    public double calculateT10(List<SongRecord> dataset) {
+        return 0.0; // First-order summary doesn't have a qualifier
+    }
+
+
 
 
 
