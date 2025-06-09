@@ -89,6 +89,9 @@ public class ConsoleInterface {
                 case "8":
                     displayAllSummaries();
                     break;
+                case "9":
+                    clearSummaries();
+                    break;
                 case "0":
                     System.out.println("Zamykanie...");
                     return;
@@ -96,6 +99,11 @@ public class ConsoleInterface {
                     System.out.println("Nieprawidłowy wybór. Spróbuj ponownie.");
             }
         }
+    }
+
+    private void clearSummaries() {
+        generatedSummaries.clear();
+        System.out.println("Wszystkie wygenerowane podsumowania zostały wyczyszczone.");
     }
 
     private void selectQuantifier() {
