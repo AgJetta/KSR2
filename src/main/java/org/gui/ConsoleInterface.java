@@ -1,6 +1,7 @@
 package org.gui;
 
 import org.dataImport.ConfigImporter;
+import org.dataImport.CsvSongImporter;
 import org.fuzzy.LinguisticSummary;
 import org.fuzzy.SongRecord;
 import org.fuzzy.quantifiers.Quantifier;
@@ -16,8 +17,8 @@ import java.util.Scanner;
 public class ConsoleInterface {
     private final Scanner scanner = new Scanner(System.in);
 
-    private List<String> lastGeneratedSummaries = new ArrayList<>();
-
+    // Teraz przechowujemy listę par: tekst podsumowania i wartość T1
+    private List<LinguisticSummaryResult> generatedSummaries = new ArrayList<>();
     private List<SongRecord> dataset;
 
     private List<Quantifier> quantifiers;
@@ -27,11 +28,24 @@ public class ConsoleInterface {
     private List<Summarizer> selectedSummarizers;
 
     public ConsoleInterface() {
-        // Ładujemy config przy starcie
         quantifiers = ConfigImporter.loadQuantifiersFromConfig();
         summarizers = ConfigImporter.loadSummarizersFromConfig();
-        dataset = new ArrayList<>();  // pusta lista lub załaduj dane w inny sposób
 
+        System.out.println("Ładowanie danych z CSV...");
+        dataset = CsvSongImporter.importSongs(30000);  // załaduj 1000 rekordów
+        System.out.println("Zaimportowano " + dataset.size() + " rekordów.");
+    }
+
+
+    // Klasa pomocnicza do przechowywania tekstu i wartości T1
+    private static class LinguisticSummaryResult {
+        String summaryText;
+        double truthDegree;
+
+        public LinguisticSummaryResult(String summaryText, double truthDegree) {
+            this.summaryText = summaryText;
+            this.truthDegree = truthDegree;
+        }
     }
 
     public void start() {
@@ -44,6 +58,7 @@ public class ConsoleInterface {
             System.out.println("5. Posortuj podsumowania");
             System.out.println("6. Zapisz podsumowania do pliku");
             System.out.println("7. Tryb zaawansowany");
+            System.out.println("8. Wyświetl wszystkie wygenerowane podsumowania");
             System.out.println("0. Wyjście");
 
             System.out.print("Twój wybór: ");
@@ -71,6 +86,9 @@ public class ConsoleInterface {
                 case "7":
                     advancedMode();
                     break;
+                case "8":
+                    displayAllSummaries();
+                    break;
                 case "0":
                     System.out.println("Zamykanie...");
                     return;
@@ -79,8 +97,6 @@ public class ConsoleInterface {
             }
         }
     }
-
-
 
     private void selectQuantifier() {
         System.out.println("\nWybierz kwalifikator (Quantifier):");
@@ -128,7 +144,6 @@ public class ConsoleInterface {
     }
 
     private void generateSummaries() {
-        lastGeneratedSummaries.clear();
 
         if (selectedQuantifier == null) {
             System.out.println("Najpierw wybierz kwalifikator (opcja 1).");
@@ -152,10 +167,24 @@ public class ConsoleInterface {
 
             String line = String.format("%s\nStopień prawdziwości: %.3f", summaryText, truthDegree);
             System.out.println("- " + line);
-            lastGeneratedSummaries.add(line);
+            generatedSummaries.add(new LinguisticSummaryResult(line, truthDegree));
         }
     }
 
+    private void displayAllSummaries() {
+        if (generatedSummaries.isEmpty()) {
+            System.out.println("Brak wygenerowanych podsumowań.");
+            return;
+        }
+
+        System.out.println("\n=== Wszystkie wygenerowane podsumowania ===");
+        int count = 1;
+        for (LinguisticSummaryResult summary : generatedSummaries) {
+            System.out.println(count + ". " + summary.summaryText);
+            System.out.println();
+            count++;
+        }
+    }
 
     private void setWeights() {
         System.out.println("Ustawianie wag... (niezaimplementowane)");
@@ -166,7 +195,7 @@ public class ConsoleInterface {
     }
 
     private void saveSummaries() {
-        if (lastGeneratedSummaries.isEmpty()) {
+        if (generatedSummaries.isEmpty()) {
             System.out.println("Brak podsumowań do zapisania. Wygeneruj podsumowania najpierw (opcja 3).");
             return;
         }
@@ -175,8 +204,8 @@ public class ConsoleInterface {
         String filename = scanner.nextLine();
 
         try (BufferedWriter writer = new BufferedWriter(new FileWriter(filename))) {
-            for (String summary : lastGeneratedSummaries) {
-                writer.write(summary);
+            for (LinguisticSummaryResult summary : generatedSummaries) {
+                writer.write(summary.summaryText);
                 writer.newLine();
                 writer.newLine();
             }
@@ -185,6 +214,7 @@ public class ConsoleInterface {
             System.out.println("Błąd podczas zapisu do pliku: " + e.getMessage());
         }
     }
+
 
     private void advancedMode() {
         System.out.println("Tryb zaawansowany... (niezaimplementowane)");
