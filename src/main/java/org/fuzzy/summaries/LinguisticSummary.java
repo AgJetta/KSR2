@@ -14,6 +14,8 @@ public class LinguisticSummary {
     protected final String predicate;
     protected final Summarizer summarizer;
 
+    protected final List<Double> measureWeights = Arrays.asList(0.2, 0.05, 0.05, 0.2, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1);
+
     public LinguisticSummary(Quantifier quantifier, String predicate, Summarizer summarizer) {
         this.quantifier = quantifier;
         this.predicate = predicate;
@@ -95,8 +97,12 @@ public class LinguisticSummary {
         double t8 = calculateT8(dataset);
         double t9 = calculateT9(dataset);
         double t10 = calculateT10(dataset);
-        return String.format("%s" + "(T1: %.7f | T2: %.7f | T3: %.7f | T4: %.7f | T5: %.7f | T6: %.7f | T7: %.7f | T8: %.7f | T9: %.7f | T10: %.7f)",
-                generateSummary(), t1, t2, t3, t4, t5, t6, t7, t8, t9, t10);
+        double t11 = calculateT11(dataset);
+        double optimal = calculateOptimal(dataset);
+
+        String summaryString = generateSummary();
+        return String.format("%-110s" + " %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f",
+                summaryString, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, optimal);
     }
 
     public double calculateT4(List<SongRecord> dataset) {
@@ -146,8 +152,22 @@ public class LinguisticSummary {
         return 0.0; // First-order summary doesn't have a qualifier
     }
 
+    public double calculateT11(List<SongRecord> dataset) {
+        return 0.0; // First-order summary doesn't have a qualifier
+    }
 
-
+    public double calculateOptimal(List<SongRecord> dataset){
+        return calculateT1(dataset) * measureWeights.get(0) +
+                calculateT2(dataset) * measureWeights.get(1) +
+                calculateT3(dataset) * measureWeights.get(2) +
+                calculateT4(dataset) * measureWeights.get(3) +
+                calculateT5(dataset) * measureWeights.get(4) +
+                calculateT6(dataset) * measureWeights.get(5) +
+                calculateT7(dataset) * measureWeights.get(6) +
+                calculateT8(dataset) * measureWeights.get(7) +
+                calculateT9(dataset) * measureWeights.get(8) +
+                calculateT10(dataset) * measureWeights.get(9);
+    }
 
 
     @Override
@@ -155,6 +175,39 @@ public class LinguisticSummary {
         return generateSummary();
     }
 
+    public void printLatexFuzzySummaryResults(List<SongRecord> dataset) {
+
+        double t1 = calculateT1(dataset);
+        double t2 = calculateT2(dataset);
+        double t3 = calculateT3(dataset);
+        double t4 = calculateT4(dataset);
+        double t5 = calculateT5(dataset);
+        double t6 = calculateT6(dataset);
+        double t7 = calculateT7(dataset);
+        double t8 = calculateT8(dataset);
+        double t9 = calculateT9(dataset);
+        double t10 = calculateT10(dataset);
+        double t11 = calculateT11(dataset);
+        double optimal = calculateOptimal(dataset);
+
+        String summaryString = generateSummary();
+        System.out.printf("%s", summaryString);
+        System.out.printf(" & %.4f", t1);
+        System.out.printf(" & %.4f", t2);
+        System.out.printf(" & %.4f", t3);
+        System.out.printf(" & %.4f", t4);
+        System.out.printf(" & %.4f", t5);
+        System.out.printf(" & %.4f", t6);
+        System.out.printf(" & %.4f", t7);
+        System.out.printf(" & %.4f", t8);
+        System.out.printf(" & %.4f", t9);
+        System.out.printf(" & %.4f", t10);
+        System.out.printf(" & %.4f", t11);
+        System.out.printf(" & %.4f", optimal);
+        System.out.printf(" \\\\ %n");
+        System.out.println("\\midrule");
+    }
+
+
 }
 
-// Example usage and testing

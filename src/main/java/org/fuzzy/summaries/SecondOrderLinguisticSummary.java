@@ -67,6 +67,13 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
     }
 
     @Override
+    public double calculateT11(List<SongRecord> dataset) {
+        double base = 0.5; // Placeholder for base value
+        double exponent = Math.pow(base, 1); // Placeholder for exponent
+        return 2 * exponent;
+    }
+
+    @Override
     public String generateSummary() {
         return String.format("%s %s które są/mają [%s %s] są/mają [%s %s]",
                 quantifier.getName(),
