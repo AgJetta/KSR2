@@ -1,6 +1,6 @@
 package org.dataImport;
 
-import org.fuzzy.fuzzyQuantifiers.Quantifier;
+import org.fuzzy.quantifiers.Quantifier;
 import org.json.JSONObject;
 import org.json.JSONArray;
 import org.fuzzy.FuzzySet;
@@ -9,7 +9,6 @@ import org.fuzzy.membershipFunctions.MembershipFunction;
 import org.fuzzy.membershipFunctions.MembershipFunctions;
 import org.fuzzy.summarizer.Summarizer;
 
-import java.io.IOException;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
@@ -59,7 +58,7 @@ public class ConfigImporter {
                 Quantifier return_quantifier = new Quantifier(quantifierName, fuzzySet, isRelative);
                 quantifiers.add(return_quantifier);
 
-                System.out.println("Created quantifier: " + quantifierName);
+//                System.out.println("Created quantifier: " + quantifierName);
             }
 
             return quantifiers;
@@ -105,7 +104,7 @@ public class ConfigImporter {
                     Summarizer summarizer = new Summarizer(termName, variableDatabaseName, fuzzySet);
                     summarizers.add(summarizer);
 
-                    System.out.println("Created summarizer: " + termName + " for field: " + variableDatabaseName);
+//                    System.out.println("Created summarizer: " + termName + " for field: " + variableDatabaseName);
                 }
             }
 
@@ -144,6 +143,33 @@ public class ConfigImporter {
                     throw new IllegalArgumentException("Gaussian function requires exactly 2 parameters (mean, stddev)");
                 }
                 return MembershipFunctions.gaussian(
+                        parameters.getDouble(0),
+                        parameters.getDouble(1)
+                );
+
+            case "crisp":
+                if (parameters.length() != 2) {
+                    throw new IllegalArgumentException("Crisp function requires exactly 2 parameters");
+                }
+                return MembershipFunctions.crisp(
+                        parameters.getDouble(0),
+                        parameters.getDouble(1)
+                );
+
+            case "rampdown":
+                if (parameters.length() != 2) {
+                    throw new IllegalArgumentException("RampDown function requires exactly 2 parameters");
+                }
+                return MembershipFunctions.rampDown(
+                        parameters.getDouble(0),
+                        parameters.getDouble(1)
+                );
+
+            case "rampup":
+                if (parameters.length() != 2) {
+                    throw new IllegalArgumentException("RampUp function requires exactly 2 parameters");
+                }
+                return MembershipFunctions.rampUp(
                         parameters.getDouble(0),
                         parameters.getDouble(1)
                 );
