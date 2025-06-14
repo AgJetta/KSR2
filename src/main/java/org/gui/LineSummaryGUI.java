@@ -168,6 +168,75 @@ public class LineSummaryGUI extends JFrame {
         // Add tabbed pane to frame
         add(tabbedPane, BorderLayout.CENTER);
 
+
+
+// Background colors
+        Color pinkPastel = new Color(177, 59, 255);
+        Color lavender = new Color(230, 230, 250);
+        Color babyBlue = new Color(173, 216, 230);
+
+// Set main background color
+        getContentPane().setBackground(pinkPastel);
+
+// Set tabbed pane background and font
+        for (int i = 0; i < tabbedPane.getTabCount(); i++) {
+            tabbedPane.setBackgroundAt(i, lavender);
+        }
+        tabbedPane.setFont(new Font("Comic Sans MS", Font.BOLD, 16));
+
+// Set font and background for combo boxes
+        Font coolFont = new Font("Comic Sans MS", Font.ITALIC, 14);
+        quantifierCombo1.setFont(coolFont);
+        summarizerCombo1.setFont(coolFont);
+        quantifierCombo2.setFont(coolFont);
+        summarizerCombo2.setFont(coolFont);
+        qualifierCombo2.setFont(coolFont);
+
+        quantifierCombo1.setBackground(Color.WHITE);
+        summarizerCombo1.setBackground(Color.WHITE);
+        quantifierCombo2.setBackground(Color.WHITE);
+        summarizerCombo2.setBackground(Color.WHITE);
+        qualifierCombo2.setBackground(Color.WHITE);
+
+// Style buttons with pastel colors and rounded corners
+        for (Component c : topPanel1.getComponents()) {
+            if (c instanceof JButton btn) {
+                btn.setBackground(new Color(59, 103, 255)); // hot pink
+                btn.setForeground(Color.WHITE);
+                btn.setFont(coolFont);
+                btn.setFocusPainted(false);
+            }
+        }
+        for (Component c : topPanel2.getComponents()) {
+            if (c instanceof JButton btn) {
+                btn.setBackground(new Color(177, 59, 255));
+                btn.setForeground(Color.WHITE);
+                btn.setFont(coolFont);
+                btn.setFocusPainted(false);
+            }
+        }
+
+// TextAreas styling
+        resultArea1.setBackground(babyBlue);
+        resultArea1.setForeground(new Color(138, 43, 226));
+        resultArea1.setFont(new Font("Comic Sans MS", Font.PLAIN, 14));
+
+        resultArea2.setBackground(lavender);
+        resultArea2.setForeground(new Color(138, 43, 226));
+        resultArea2.setFont(new Font("Comic Sans MS", Font.PLAIN, 14));
+
+// Table headers and rows styling
+        summaryTable1.getTableHeader().setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        summaryTable1.setFont(new Font("Comic Sans MS", Font.PLAIN, 13));
+        summaryTable1.setBackground(new Color(199, 237, 255)); // misty rose
+        summaryTable1.setForeground(new Color(199, 21, 133)); // medium violet red
+
+        summaryTable2.getTableHeader().setFont(new Font("Comic Sans MS", Font.BOLD, 14));
+        summaryTable2.setFont(new Font("Comic Sans MS", Font.PLAIN, 13));
+        summaryTable2.setBackground(new Color(236, 203, 252));
+        summaryTable2.setForeground(new Color(199, 21, 133));
+
+
         // Event handlers for first tab
         generateBtn1.addActionListener(this::generateFirstOrderSummary);
         clearBtn1.addActionListener(e -> clearSummaries(1));
