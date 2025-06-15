@@ -29,6 +29,8 @@ public class DevMain {
 
         for (Quantifier quantifier : quantifiers) {
             quantifier.connectDataset(dataset);
+            int cardinalNumber =  quantifier.isRelative() ? 1 : dataset.size(); // For relative quantifiers, universe is [0,1], for absolute [0,30000]
+            quantifier.getFuzzySet().getUniverse().setCardinalNumber(cardinalNumber);
         }
 
 //        System.out.println("=== Linguistic Summaries===");
@@ -42,10 +44,10 @@ public class DevMain {
             }
         }
 
-        Quantifier one_third = quantifiers.stream()
-                .filter(q -> q.getName().equals("PRAWIE WSZYSTKIE"))
+        Quantifier less_than_1000 = quantifiers.stream()
+                .filter(q -> q.getName().equals("WIĘCEJ NIŻ 1000"))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Quantifier 'one third' not found"));
+                .orElseThrow(() -> new RuntimeException("Quantifier 'more than 1000' not found"));
         System.out.println("\n=== Second Order Summaries ===");
         System.out.println(header);
         for (Summarizer summarizer: summarizers){
@@ -53,7 +55,7 @@ public class DevMain {
                 if (qualifier.equals(summarizer)) continue; // Skip self-qualifying
                 if (qualifier.linguisiticVariable.equals(summarizer.linguisiticVariable)) continue; // Skip same linguistic variable
                 LinguisticSummary secondOrderSummary = new SecondOrderLinguisticSummary(
-                        one_third, "utworów", summarizer, qualifier);
+                        less_than_1000, "utworów", summarizer, qualifier);
                 System.out.println(secondOrderSummary.generateSummaryWithMeasures(dataset));
 //                secondOrderSummary.printLatexFuzzySummaryResults(dataset);
             }

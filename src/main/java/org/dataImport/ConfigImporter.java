@@ -55,9 +55,24 @@ public class ConfigImporter {
 
                 // Create fuzzy set and summarizer
                 FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
+                double quantifierMinValue = parametersArray.getDouble(0);
+                double quantifierMaxValue = -1;
+                if (functionType.equals("trapezoidal")) {
+                    quantifierMaxValue = parametersArray.getDouble(3);
+                } else {
+                    quantifierMaxValue = parametersArray.getDouble(2);
+                }
+                if (quantifierMinValue < 0.0 ) {
+                    quantifierMinValue = 0.0;
+                }
+                if (quantifierMaxValue > 1.0 && isRelative) {
+                    quantifierMaxValue = 1.0;
+                }
+                if (quantifierMaxValue > universeMax) {
+                    quantifierMaxValue = universeMax;
+                }
                 Quantifier return_quantifier = new Quantifier(quantifierName, fuzzySet, isRelative,
-                        parametersArray.getDouble(0),
-                        parametersArray.getDouble(1));
+                        quantifierMinValue, quantifierMaxValue);
                 quantifiers.add(return_quantifier);
 
 //                System.out.println("Created quantifier: " + quantifierName);

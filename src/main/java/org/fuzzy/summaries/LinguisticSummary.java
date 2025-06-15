@@ -99,14 +99,22 @@ public class LinguisticSummary {
     }
 
     public double calculateT6(List<SongRecord> dataset) {
+        if (this.quantifier.getName().equals("MNIEJ NIŻ 100")) {
+            System.out.println("");
+        }
         double quantifierSupportCardinality = quantifier.getSupportCardinalNumber();
         Universe universe = quantifier.getFuzzySet().getUniverse();
         double m = quantifier.isRelative() ? 1.0 : universe.getCardinalNumber();
-
-        return 1 - (quantifierSupportCardinality / m);
+        double t6 = 1 - (quantifierSupportCardinality / m);
+        if (0 > t6 || t6 > 1 || Double.isNaN(t6)) {
+            System.err.println("t6 = " + t6 + " is not in the range (0, 1]!");
+            System.err.println("Quantifier Support Cardinality = " + quantifierSupportCardinality + ", m = " + m);
+        }
+        return t6;
     }
 
     public double calculateT7(List<SongRecord> dataset) {
+
         // How cardinality of a quantifier is supposed to be less than 1 ??!!!
         double quantifierCardinality = 0.0;
         for (SongRecord record : dataset) {
