@@ -22,16 +22,25 @@ public class DevMain {
         System.out.println("Loaded " + summarizers.size() + " summarizers");
         List<SongRecord> dataset = importSongs(30000);
 
+        for (Summarizer summarizer : summarizers) {
+            summarizer.getFuzzySet().getUniverse().setCardinalNumber(dataset.size());
+            summarizer.connectDataset(dataset);
+        }
+
+        for (Quantifier quantifier : quantifiers) {
+            quantifier.connectDataset(dataset);
+        }
+
 //        System.out.println("=== Linguistic Summaries===");
-        String header = String.format("Podsumowanie %98s", " ") + "| T1   | T2     | T3     | T4     | T5     | T6     | T7     | T8     | T9     | T10  | T11  | Optimal";
-//        System.out.println(header);
-//        for (Summarizer summarizer: summarizers){
-//            for (Quantifier quantifier: quantifiers) {
-//            LinguisticSummary summary = new LinguisticSummary(quantifier, "utworów", summarizer);
-////            System.out.println(summary.generateSummaryWithMeasures(dataset));
+        String header = String.format("Podsumowanie %98s", " ") + "   | T1   | T2     | T3     | T4     | T5     | T6     | T7     | T8     | T9     | T10    | T11    | Optimal";
+        System.out.println(header);
+        for (Summarizer summarizer: summarizers){
+            for (Quantifier quantifier: quantifiers) {
+            LinguisticSummary summary = new LinguisticSummary(quantifier, "utworów", summarizer);
+            System.out.println(summary.generateSummaryWithMeasures(dataset));
 //                summary.printLatexFuzzySummaryResults(dataset);
-//            }
-//        }
+            }
+        }
 
         Quantifier one_third = quantifiers.stream()
                 .filter(q -> q.getName().equals("PRAWIE WSZYSTKIE"))
@@ -42,10 +51,11 @@ public class DevMain {
         for (Summarizer summarizer: summarizers){
             for (Summarizer qualifier: summarizers) {
                 if (qualifier.equals(summarizer)) continue; // Skip self-qualifying
+                if (qualifier.linguisiticVariable.equals(summarizer.linguisiticVariable)) continue; // Skip same linguistic variable
                 LinguisticSummary secondOrderSummary = new SecondOrderLinguisticSummary(
                         one_third, "utworów", summarizer, qualifier);
-//                System.out.println(secondOrderSummary.generateSummaryWithMeasures(dataset));
-                secondOrderSummary.printLatexFuzzySummaryResults(dataset);
+                System.out.println(secondOrderSummary.generateSummaryWithMeasures(dataset));
+//                secondOrderSummary.printLatexFuzzySummaryResults(dataset);
             }
         }
 

@@ -58,21 +58,101 @@ public class LinguisticSummary {
         // Jak dla Second Order???
         double summarizerFuzziness = summarizer.getFuzzySet().degreeOfFuzziness();
         double product = Math.pow(summarizerFuzziness, 1); // placeholder for future compound summarizer
+        double t2 = (1 - product);
+        // debug
+        if (0 > t2 || t2 > 1) {
+            System.err.println("t2 = " + t2 + " is not in the range (0, 1]!");
+            System.err.println("Summarizer Fuzziness= " + summarizerFuzziness + " product = " + product);
+        }
 
-        return (1 - product);
+
+        return t2;
     }
 
     public double calculateT3(List<SongRecord> dataset){
-        double t = summarizer.getFuzzySet().support().cardinality();
+        double t = dataset.size();
         double h = dataset.size();
-
         return t / h;
+    }
+
+    public double calculateT4(List<SongRecord> dataset) {
+        double g = summarizer.getFuzzySet().support().cardinalNumber();
+        double m = dataset.size();
+//        double universeSize = summarizer.getFuzzySet().getUniverse().getEnd() - summarizer.getFuzzySet().getUniverse().getStart();
+//        double m = universeSize;
+        double r = g / m;
+
+        // TODO - Summation of "r" for every element in a complex summarizer (we don't have one yet)
+        double t4 = Math.abs(r - calculateT3(dataset));
+        // debug
+        if (t4 > 1) {
+            System.err.println("g = " + g + ", m = " + m + ", r = " + r + ", t3 = " + calculateT3(dataset) + ", t4 = " + t4);
+            throw new RuntimeException("T4 value is greater than 1, which is not expected!");
+        }
+        return t4;
     }
 
     public double calculateT5(List<SongRecord> dataset){
         double base = (1./2.);
         double exponent = Math.pow(base, 1);
         return 2 * exponent;
+    }
+
+    public double calculateT6(List<SongRecord> dataset) {
+        double quantifierSupportCardinality = quantifier.getSupportCardinalNumber();
+        Universe universe = quantifier.getFuzzySet().getUniverse();
+        double m = quantifier.isRelative() ? 1.0 : universe.getCardinalNumber();
+
+        return 1 - (quantifierSupportCardinality / m);
+    }
+
+    public double calculateT7(List<SongRecord> dataset) {
+        // How cardinality of a quantifier is supposed to be less than 1 ??!!!
+        double quantifierCardinality = 0.0;
+        for (SongRecord record : dataset) {
+            double membership = quantifier.getFuzzySet().getMembership(record.getAttribute(quantifier.getName()));
+            quantifierCardinality += membership;
+        }
+        Universe universe = quantifier.getFuzzySet().getUniverse();
+        double universeSize = universe.getCardinalNumber();
+
+        return 1 - (quantifierCardinality / universeSize);
+    }
+
+    public double calculateT8(List<SongRecord> dataset) {
+        double summarizerCardinality = 0.0;
+        for (SongRecord record : dataset) {
+            double membership = summarizer.getFuzzySet().getMembership(record.getAttribute(summarizer.getName()));
+            summarizerCardinality += membership;
+        }
+        Universe universe = summarizer.getFuzzySet().getUniverse();
+        double universeSize = universe.getCardinalNumber();
+        return 1 - (summarizerCardinality / universeSize);
+    }
+
+    public double calculateT9(List<SongRecord> dataset) {
+        return 0.0;
+    }
+
+    public double calculateT10(List<SongRecord> dataset) {
+        return 0.0;
+    }
+
+    public double calculateT11(List<SongRecord> dataset) {
+        return 1.0;
+    }
+
+    public double calculateOptimal(List<SongRecord> dataset){
+        return calculateT1(dataset) * measureWeights.get(0) +
+                calculateT2(dataset) * measureWeights.get(1) +
+                calculateT3(dataset) * measureWeights.get(2) +
+                calculateT4(dataset) * measureWeights.get(3) +
+                calculateT5(dataset) * measureWeights.get(4) +
+                calculateT6(dataset) * measureWeights.get(5) +
+                calculateT7(dataset) * measureWeights.get(6) +
+                calculateT8(dataset) * measureWeights.get(7) +
+                calculateT9(dataset) * measureWeights.get(8) +
+                calculateT10(dataset) * measureWeights.get(9);
     }
 
     // Generate natural language summary
@@ -101,74 +181,9 @@ public class LinguisticSummary {
         double optimal = calculateOptimal(dataset);
 
         String summaryString = generateSummary();
-        return String.format("%-110s" + " %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f",
+        return String.format("%-113s" + " %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f | %.4f",
                 summaryString, t1, t2, t3, t4, t5, t6, t7, t8, t9, t10, t11, optimal);
     }
-
-    public double calculateT4(List<SongRecord> dataset) {
-        double t = summarizer.getFuzzySet().support().cardinality();
-        double h = dataset.size();
-
-        return (t / h) - calculateT3(dataset);
-    }
-
-    public double calculateT6(List<SongRecord> dataset) {
-        double quantifierSupportCardinality = quantifier.getFuzzySet().support().cardinality();
-        Universe universe = quantifier.getFuzzySet().getUniverse();
-        double universeSize = universe.getLength();
-
-        return 1 - (quantifierSupportCardinality / universeSize);
-    }
-
-    public double calculateT7(List<SongRecord> dataset) {
-        // How cardinality of a quantifier is supposed to be less than 1 ??!!!
-        double quantifierCardinality = 0.0;
-        for (SongRecord record : dataset) {
-            double membership = quantifier.getFuzzySet().getMembership(record.getAttribute(quantifier.getName()));
-            quantifierCardinality += membership;
-        }
-        Universe universe = quantifier.getFuzzySet().getUniverse();
-        double universeSize = universe.getLength();
-
-        return 1 - (quantifierCardinality / universeSize);
-    }
-
-    public double calculateT8(List<SongRecord> dataset) {
-        double summarizerCardinality = 0.0;
-        for (SongRecord record : dataset) {
-            double membership = summarizer.getFuzzySet().getMembership(record.getAttribute(summarizer.getName()));
-            summarizerCardinality += membership;
-        }
-        Universe universe = summarizer.getFuzzySet().getUniverse();
-        double universeSize = universe.getLength();
-        return 1 - (summarizerCardinality / universeSize);
-    }
-
-    public double calculateT9(List<SongRecord> dataset) {
-        return 0.0; // First-order summary doesn't have a qualifier
-    }
-
-    public double calculateT10(List<SongRecord> dataset) {
-        return 0.0; // First-order summary doesn't have a qualifier
-    }
-
-    public double calculateT11(List<SongRecord> dataset) {
-        return 0.0; // First-order summary doesn't have a qualifier
-    }
-
-    public double calculateOptimal(List<SongRecord> dataset){
-        return calculateT1(dataset) * measureWeights.get(0) +
-                calculateT2(dataset) * measureWeights.get(1) +
-                calculateT3(dataset) * measureWeights.get(2) +
-                calculateT4(dataset) * measureWeights.get(3) +
-                calculateT5(dataset) * measureWeights.get(4) +
-                calculateT6(dataset) * measureWeights.get(5) +
-                calculateT7(dataset) * measureWeights.get(6) +
-                calculateT8(dataset) * measureWeights.get(7) +
-                calculateT9(dataset) * measureWeights.get(8) +
-                calculateT10(dataset) * measureWeights.get(9);
-    }
-
 
     @Override
     public String toString() {

@@ -6,6 +6,7 @@ import java.util.List;
 public class Universe {
     private final double start;
     private final double end;
+    private int cardinalNumber = 30000;
     private final boolean isDense;
     private final double step; // for discrete universes
 
@@ -31,7 +32,13 @@ public class Universe {
     public double getEnd() { return end; }
     public boolean isDense() { return isDense; }
     public double getStep() { return step; }
-    public double getLength() { return end - start; }
+    public double getCardinalNumber() { return cardinalNumber; }
+    public void setCardinalNumber(int cardinalNumber) {
+        if (cardinalNumber <= 0) {
+            throw new IllegalArgumentException("Cardinal number must be positive");
+        }
+        this.cardinalNumber = cardinalNumber;
+    }
 
     public boolean contains(double x) {
         return x >= start && x <= end;

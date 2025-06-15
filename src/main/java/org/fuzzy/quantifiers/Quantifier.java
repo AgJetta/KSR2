@@ -8,6 +8,8 @@ import org.fuzzy.summarizer.Summarizer;
 // Quantifier class inheriting from Summarizer
 public class Quantifier extends Summarizer {
     private final boolean isRelative;
+    private double start;
+    private double end;
 
     // Constructor for relative quantifiers (operates on [0,1] range)
     public Quantifier(String name, FuzzySet fuzzySet) {
@@ -16,9 +18,11 @@ public class Quantifier extends Summarizer {
     }
 
     // Constructor for absolute quantifiers
-    public Quantifier(String name, FuzzySet fuzzySet, boolean isRelative) {
+    public Quantifier(String name, FuzzySet fuzzySet, boolean isRelative, double start, double end) {
         super(name, isRelative ? "proportion" : "count", fuzzySet);
         this.isRelative = isRelative;
+        this.start = start;
+        this.end = end;
     }
 
     public boolean isRelative() {
@@ -33,5 +37,13 @@ public class Quantifier extends Summarizer {
         } else {
             return fuzzySet.getMembership(r);
         }
+    }
+
+    public double getSupportCardinalNumber() {
+        // Integral of the membership function over the universe of discourse
+        // For relative, this is the area under the curve in [0,1]
+        // For absolute, this is the area under the curve in [0, max] == [0, 30000] for our dataset
+        double supportInterval = this.end - this.start;
+        return supportInterval;
     }
 }

@@ -27,8 +27,8 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
         // Calculate r - sum of membership degrees in summarizer
         FuzzySet intersection = summarizer.getFuzzySet().intersection(
                 qualifier.getFuzzySet());
-        double upperSum = intersection.cardinality();
-        double lowerSum = qualifier.getFuzzySet().cardinality();
+        double upperSum = intersection.cardinalNumber();
+        double lowerSum = qualifier.getFuzzySet().cardinalNumber();
         double r = upperSum / lowerSum;
 
         // Calculate quantifier membership based on r and m
@@ -39,9 +39,17 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
     public double calculateT3(List<SongRecord> dataset){
         FuzzySet intersection = summarizer.getFuzzySet().intersection(
                 qualifier.getFuzzySet());
-        double t = intersection.support().cardinality();
-        double h = dataset.size();
-        return t / h;
+        double t = intersection.support().cardinalNumber();
+//        double h = dataset.size();
+        double h = qualifier.getFuzzySet().support().cardinalNumber();
+        double t3 = t / h;
+        if (0 > t3 || t3 > 1 || Double.isNaN(t3)) {
+            System.err.println("t3 = " + t3 + " is not in the range (0, 1]!");
+            FuzzySet intersection_error = summarizer.getFuzzySet().intersection(
+                    qualifier.getFuzzySet());
+        }
+
+        return t3;
     }
 
     @Override
@@ -59,7 +67,7 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
             qualifierCardinality += membership;
         }
         Universe universe = qualifier.getFuzzySet().getUniverse();
-        double universeSize = universe.getLength();
+        double universeSize = universe.getCardinalNumber();
         double ratio = qualifierCardinality / universeSize;
 
         return 1 - ratio;

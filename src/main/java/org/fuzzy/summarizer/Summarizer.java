@@ -13,10 +13,18 @@ public class Summarizer {
     protected final FuzzySet fuzzySet;
     public String linguisiticVariable = "";
 
+    private List<SongRecord> data = null; // List of song records for this fuzzy set
+
     public Summarizer(String name, String fieldName, FuzzySet fuzzySet) {
         this.name = name;
         this.fieldName = fieldName;
         this.fuzzySet = fuzzySet;
+        this.fuzzySet.setFieldName(fieldName);
+    }
+
+    public void connectDataset(List<SongRecord> data) {
+        this.data = data;
+        this.getFuzzySet().connectDataset(data, fieldName);
     }
 
     public String getName() {

@@ -55,7 +55,9 @@ public class ConfigImporter {
 
                 // Create fuzzy set and summarizer
                 FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
-                Quantifier return_quantifier = new Quantifier(quantifierName, fuzzySet, isRelative);
+                Quantifier return_quantifier = new Quantifier(quantifierName, fuzzySet, isRelative,
+                        parametersArray.getDouble(0),
+                        parametersArray.getDouble(1));
                 quantifiers.add(return_quantifier);
 
 //                System.out.println("Created quantifier: " + quantifierName);
