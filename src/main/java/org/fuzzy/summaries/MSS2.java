@@ -1,40 +1,23 @@
 package org.fuzzy.summaries;
 
+import org.fuzzy.FuzzySet;
 import org.fuzzy.SongRecord;
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summarizer.Summarizer;
 
-import java.util.Arrays;
 import java.util.List;
 
-// MultiSubject Summary Form 1
-public class MSS1 {
-    protected final String predicate1;
-    protected final String predicate2;
+public class MSS2 extends MSS1 {
 
-    protected final Quantifier quantifier;
+    private Summarizer summarizer2;
 
-    protected final Summarizer summarizer;
-
-    public MSS1(String predicate1, String predicate2, Quantifier quantifier, Summarizer summarizer) {
-        this.predicate1 = predicate1;
-        this.predicate2 = predicate2;
-        this.quantifier = quantifier;
-        this.summarizer = summarizer;
+    public MSS2(String predicate1, String predicate2, Quantifier quantifier, Summarizer summarizer, Summarizer summarizer2) {
+        super(predicate1, predicate2, quantifier, summarizer);
+        this.summarizer2 = summarizer2;
     }
 
-
-    public Quantifier getQuantifier() {
-        return quantifier;
-    }
-
-    public String getPredicate1() {
-        return predicate1;
-    }
-    public String getPredicate2() { return predicate2; }
-
-    public Summarizer getSummarizer() {
-        return summarizer;
+    public Summarizer getSummarizer2() {
+        return summarizer2;
     }
 
     // Calculate T1 (degree of truth)
@@ -55,14 +38,21 @@ public class MSS1 {
         int M_p1 = songsPredicate1.size();
         int M_p2 = songsPredicate2.size();
 
-        double sigma_count_s1p1 = songsPredicate1.stream()
-                .mapToDouble(song -> summarizer.getFuzzySet().getMembership(song.getAttribute(summarizer.getFieldName())))
+        double sigma_count_s1s2p1 = 0.0;
+        for (SongRecord song : songsPredicate1) {
+            double membershipValueToS1 = summarizer.getFuzzySet().getMembership(song.getAttribute(summarizer.getFieldName()));
+            double membershipValueToS2 = summarizer2.getFuzzySet().getMembership(song.getAttribute(summarizer2.getFieldName()));
+            double intersectionMembership = Math.min(membershipValueToS1, membershipValueToS2);
+            sigma_count_s1s2p1 += intersectionMembership;
+        }
+        double sigma_count_s2p1 = songsPredicate1.stream()
+                .mapToDouble(song -> summarizer2.getFuzzySet().getMembership(song.getAttribute(summarizer2.getFieldName())))
                 .sum();
         double sigma_count_s1p2 = songsPredicate2.stream()
                 .mapToDouble(song -> summarizer.getFuzzySet().getMembership(song.getAttribute(summarizer.getFieldName())))
                 .sum();
-        double nominator = sigma_count_s1p1 / M_p1;
-        double denominator = sigma_count_s1p1 / M_p1 + sigma_count_s1p2 / M_p2;
+        double nominator = sigma_count_s1s2p1 / M_p1;
+        double denominator = sigma_count_s2p1 / M_p1 + sigma_count_s1p2 / M_p2;
         if (denominator == 0) {
             System.err.println("Denominator is zero, cannot calculate T1!");
             return 0.0;
@@ -73,27 +63,26 @@ public class MSS1 {
     }
 
     // Generate natural language summary
+    @Override
     public String generateSummary() {
-        return String.format("%s utworów %s w odniesieniu do %s jest [%s %s]",
+        return String.format("%s utworów %s w odniesieniu do %s będących [%s %s] jest [%s %s]",
                 quantifier.getName(),
                 predicate1.toUpperCase(),
                 predicate2.toUpperCase(),
+                summarizer2.getName(),
+                summarizer2.linguisiticVariable,
                 summarizer.getName(),
                 summarizer.linguisiticVariable
         );
     }
 
     // Generate summary with T1 value
+    @Override
     public String generateSummaryWithMeasures(List<SongRecord> dataset) {
         double t1 = calculateT1(dataset);
 
         String summaryString = generateSummary();
-        return String.format("%-113s" + " %.4f",
+        return String.format("%-140s" + " %.4f",
                 summaryString, t1);
-    }
-
-    @Override
-    public String toString() {
-        return generateSummary();
     }
 }

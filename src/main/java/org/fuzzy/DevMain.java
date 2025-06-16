@@ -3,6 +3,7 @@ package org.fuzzy;
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summaries.LinguisticSummary;
 import org.fuzzy.summaries.MSS1;
+import org.fuzzy.summaries.MSS2;
 import org.fuzzy.summaries.SecondOrderLinguisticSummary;
 import org.fuzzy.summarizer.Summarizer;
 
@@ -45,6 +46,16 @@ public class DevMain {
             MSS1 mss1 = new MSS1(predicate1, predicate2, testQuantifier, summarizer);
             System.out.println(mss1.generateSummaryWithMeasures(dataset));
         }
+        // MSS2
+        for (Summarizer summarizer1 : summarizers) {
+            for (Summarizer summarizer2 : summarizers) {
+                if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
+                MSS1 mss2 = new MSS2(predicate1, predicate2, testQuantifier, summarizer1, summarizer2);
+                System.out.println(mss2.generateSummaryWithMeasures(dataset));
+            }
+        }
+
+
         System.exit(0);
 
 //        System.out.println("=== Linguistic Summaries===");
