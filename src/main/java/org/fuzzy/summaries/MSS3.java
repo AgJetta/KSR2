@@ -69,14 +69,4 @@ public class MSS3 extends MSS2 {
                 summarizer.linguisiticVariable
         );
     }
-
-    // Generate summary with T1 value
-    @Override
-    public String generateSummaryWithMeasures(List<SongRecord> dataset) {
-        double t1 = calculateT1(dataset);
-
-        String summaryString = generateSummary();
-        return String.format("%-140s" + " %.4f",
-                summaryString, t1);
-    }
 }

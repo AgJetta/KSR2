@@ -59,7 +59,11 @@ public class DevMain {
                 System.out.println(mss3.generateSummaryWithMeasures(dataset));
             }
         }
-
+        // MSS4
+        for (Summarizer summarizer : summarizers) {
+                MSS4 mss4 = new MSS4(predicate1, predicate2, summarizer);
+                System.out.println(mss4.generateSummaryWithMeasures(dataset));
+        }
 
         System.exit(0);
 
