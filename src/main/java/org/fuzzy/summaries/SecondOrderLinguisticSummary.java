@@ -45,21 +45,13 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
         FuzzySet intersection = summarizer.getFuzzySet().intersection(
                 qualifier.getFuzzySet());
         double t = intersection.support().cardinalNumber();
-//        double h = dataset.size();
         double h = qualifier.getFuzzySet().support().cardinalNumber();
         double t3 = t / h;
-        if (0 > t3 || t3 > 1 || Double.isNaN(t3)) {
-            System.err.println("t3 = " + t3 + " is not in the range (0, 1]!");
-            FuzzySet intersection_error = summarizer.getFuzzySet().intersection(
-                    qualifier.getFuzzySet());
-        }
-
         return t3;
     }
 
     @Override
     public double calculateT9(List<SongRecord> dataset) {
-        // Right now does not support Compound Summarizers (Qualifiers)
         double product = qualifier.getFuzzySet().degreeOfFuzziness();
         return 1 - product;
     }

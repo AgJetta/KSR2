@@ -2,6 +2,7 @@ package org.fuzzy;
 
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summaries.*;
+import org.fuzzy.summarizer.CompoundSummarizer;
 import org.fuzzy.summarizer.Summarizer;
 
 import java.util.*;
@@ -39,32 +40,45 @@ public class DevMain {
                 .filter(q -> q.getName().equals("JEDNA TRZECIA (1/3)"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Quantifier '1/3' not found"));
-        for (Summarizer summarizer : summarizers) {
-            MSS1 mss1 = new MSS1(predicate1, predicate2, testQuantifier, summarizer);
-            System.out.println(mss1.generateSummaryWithMeasures(dataset));
-        }
-        // MSS2
-        for (Summarizer summarizer1 : summarizers) {
-            for (Summarizer summarizer2 : summarizers) {
-                if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
-                MSS1 mss2 = new MSS2(predicate1, predicate2, testQuantifier, summarizer1, summarizer2);
-                System.out.println(mss2.generateSummaryWithMeasures(dataset));
-            }
-        }
-        // MSS3
-        for (Summarizer summarizer1 : summarizers) {
-            for (Summarizer summarizer2 : summarizers) {
-                if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
-                MSS2 mss3 = new MSS3(predicate1, predicate2, testQuantifier, summarizer1, summarizer2);
-                System.out.println(mss3.generateSummaryWithMeasures(dataset));
-            }
-        }
-        // MSS4
-        for (Summarizer summarizer : summarizers) {
-                MSS4 mss4 = new MSS4(predicate1, predicate2, summarizer);
-                System.out.println(mss4.generateSummaryWithMeasures(dataset));
-        }
 
+//        for (Summarizer summarizer : summarizers) {
+//            MSS1 mss1 = new MSS1(predicate1, predicate2, testQuantifier, summarizer);
+//            System.out.println(mss1.generateSummaryWithMeasures(dataset));
+//        }
+//        // MSS2
+//        for (Summarizer summarizer1 : summarizers) {
+//            for (Summarizer summarizer2 : summarizers) {
+//                if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
+//                MSS1 mss2 = new MSS2(predicate1, predicate2, testQuantifier, summarizer1, summarizer2);
+//                System.out.println(mss2.generateSummaryWithMeasures(dataset));
+//            }
+//        }
+//        // MSS3
+//        for (Summarizer summarizer1 : summarizers) {
+//            for (Summarizer summarizer2 : summarizers) {
+//                if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
+//                MSS2 mss3 = new MSS3(predicate1, predicate2, testQuantifier, summarizer1, summarizer2);
+//                System.out.println(mss3.generateSummaryWithMeasures(dataset));
+//            }
+//        }
+//        // MSS4
+//        for (Summarizer summarizer : summarizers) {
+//                MSS4 mss4 = new MSS4(predicate1, predicate2, summarizer);
+//                System.out.println(mss4.generateSummaryWithMeasures(dataset));
+//        }
+        // Compound Summarizer
+
+        for (Summarizer summarizer1 : summarizers) {
+            for (Summarizer summarizer2 : summarizers) {
+                if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
+                List<Summarizer> temp = new ArrayList<>();
+                temp.add(summarizer1); temp.add(summarizer2);
+                CompoundSummarizer compoundSummarizer = new CompoundSummarizer(temp);
+                LinguisticSummaryCompound summary = new LinguisticSummaryCompound(
+                        testQuantifier, "utworów", compoundSummarizer);
+                System.out.println(summary.generateSummaryWithMeasures(dataset));
+            }
+        }
         System.exit(0);
 
 //        System.out.println("=== Linguistic Summaries===");
