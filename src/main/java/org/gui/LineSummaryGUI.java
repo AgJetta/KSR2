@@ -52,6 +52,18 @@ public class LineSummaryGUI extends JFrame {
         summarizers = ConfigImporter.loadSummarizersFromConfig();
         dataset = CsvSongImporter.importSongs(30000);
 
+        // Additional configuraion
+        for (Summarizer summarizer : summarizers) {
+            summarizer.getFuzzySet().getUniverse().setCardinalNumber(dataset.size());
+            summarizer.connectDataset(dataset);
+        }
+
+        for (Quantifier quantifier : quantifiers) {
+            quantifier.connectDataset(dataset);
+            int cardinalNumber =  quantifier.isRelative() ? 1 : dataset.size(); // For relative quantifiers, universe is [0,1], for absolute [0,30000]
+            quantifier.getFuzzySet().getUniverse().setCardinalNumber(cardinalNumber);
+        }
+
         // Tabbed pane
         JTabbedPane tabbedPane = new JTabbedPane();
 

@@ -2,6 +2,7 @@ package org.fuzzy;
 
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summaries.LinguisticSummary;
+import org.fuzzy.summaries.MSS1;
 import org.fuzzy.summaries.SecondOrderLinguisticSummary;
 import org.fuzzy.summarizer.Summarizer;
 
@@ -32,6 +33,19 @@ public class DevMain {
             int cardinalNumber =  quantifier.isRelative() ? 1 : dataset.size(); // For relative quantifiers, universe is [0,1], for absolute [0,30000]
             quantifier.getFuzzySet().getUniverse().setCardinalNumber(cardinalNumber);
         }
+
+        // MSS1
+        String predicate1 = "rock";
+        String predicate2 = "pop";
+        Quantifier testQuantifier = quantifiers.stream()
+                .filter(q -> q.getName().equals("JEDNA TRZECIA (1/3)"))
+                .findFirst()
+                .orElseThrow(() -> new RuntimeException("Quantifier '1/3' not found"));
+        for (Summarizer summarizer : summarizers) {
+            MSS1 mss1 = new MSS1(predicate1, predicate2, testQuantifier, summarizer);
+            System.out.println(mss1.generateSummaryWithMeasures(dataset));
+        }
+        System.exit(0);
 
 //        System.out.println("=== Linguistic Summaries===");
         String header = String.format("Podsumowanie %98s", " ") + "   | T1   | T2     | T3     | T4     | T5     | T6     | T7     | T8     | T9     | T10    | T11    | Optimal";
