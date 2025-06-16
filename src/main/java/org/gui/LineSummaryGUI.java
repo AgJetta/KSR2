@@ -157,7 +157,9 @@ public class LineSummaryGUI extends JFrame {
         resultArea2.setEditable(false);
         secondTabPanel.add(new JScrollPane(resultArea2), BorderLayout.CENTER);
 
-        String[] columns2 = {"Summary", "T1", "T3", "T9", "T10", "T11", "Optimal"};
+        String[] columns2 = {
+                "Summary", "T1", "T2", "T3", "T4", "T5", "T6", "T7", "T8", "T9", "T10", "T11", "Optimal"
+        };
         tableModel2 = new DefaultTableModel(columns2, 0);
         summaryTable2 = new JTable(tableModel2);
         summaryTable2.setAutoCreateRowSorter(true);
@@ -306,7 +308,6 @@ public class LineSummaryGUI extends JFrame {
         }
         tableModel1.addRow(row);
     }
-
     // ========== Second order summary generation ==========
     private void generateSecondOrderSummary(ActionEvent e) {
         int quantIndex = quantifierCombo2.getSelectedIndex();
@@ -325,26 +326,30 @@ public class LineSummaryGUI extends JFrame {
         SecondOrderLinguisticSummary summary = new SecondOrderLinguisticSummary(
                 quantifier, "songs", summarizer, qualifier);
 
-        double[] t = new double[6]; // Only these Ts
+        double[] t = new double[12];
         t[0] = summary.calculateT1(dataset);
-        t[1] = summary.calculateT3(dataset);
-        t[2] = summary.calculateT9(dataset);
-        t[3] = summary.calculateT10(dataset);
-        t[4] = summary.calculateT11(dataset);
-        t[5] = summary.calculateOptimal(dataset);
+        t[1] = summary.calculateT2(dataset);
+        t[2] = summary.calculateT3(dataset);
+        t[3] = summary.calculateT4(dataset);
+        t[4] = summary.calculateT5(dataset);
+        t[5] = summary.calculateT6(dataset);
+        t[6] = summary.calculateT7(dataset);
+        t[7] = summary.calculateT8(dataset);
+        t[8] = summary.calculateT9(dataset);
+        t[9] = summary.calculateT10(dataset);
+        t[10] = summary.calculateT11(dataset);
+        t[11] = summary.calculateOptimal(dataset);
 
         String summaryText = summary.generateSummary();
         resultArea2.setText("→ " + summaryText + "\n\n");
-        resultArea2.append(String.format("T1 = %.3f%n", t[0]));
-        resultArea2.append(String.format("T3 = %.3f%n", t[1]));
-        resultArea2.append(String.format("T9 = %.3f%n", t[2]));
-        resultArea2.append(String.format("T10 = %.3f%n", t[3]));
-        resultArea2.append(String.format("T11 = %.3f%n", t[4]));
-        resultArea2.append(String.format("Optimal = %.3f%n", t[5]));
+        for (int i = 0; i < 11; i++) {
+            resultArea2.append(String.format("T%d = %.3f%n", i + 1, t[i]));
+        }
+        resultArea2.append(String.format("Optimal = %.3f%n", t[11]));
 
         generatedSummaries2.add(new LinguisticSummaryResult(summaryText, t));
 
-        Object[] row = new Object[7];
+        Object[] row = new Object[13];
         row[0] = summaryText;
         for (int i = 0; i < t.length; i++) {
             row[i + 1] = String.format("%.3f", t[i]);
@@ -352,6 +357,7 @@ public class LineSummaryGUI extends JFrame {
         tableModel2.addRow(row);
     }
 
+    // ========== Clear summaries ==========
     private void clearSummaries(int tab) {
         if (tab == 1) {
             generatedSummaries1.clear();
@@ -364,68 +370,73 @@ public class LineSummaryGUI extends JFrame {
         }
     }
 
+    // ========== Save summaries ==========
     private void saveSummaries(int tab) {
+        List<LinguisticSummaryResult> list = (tab == 1) ? generatedSummaries1 : generatedSummaries2;
+        if (list.isEmpty()) {
+            JOptionPane.showMessageDialog(this, "No summaries to save.");
+            return;
+        }
+
         JFileChooser fileChooser = new JFileChooser();
-        int option = fileChooser.showSaveDialog(this);
+        int result = fileChooser.showSaveDialog(this);
 
-        if (option == JFileChooser.APPROVE_OPTION) {
+        if (result == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
-            List<LinguisticSummaryResult> summaries = (tab == 1) ? generatedSummaries1 : generatedSummaries2;
-
-            try (PrintWriter pw = new PrintWriter(new FileWriter(file))) {
-                for (LinguisticSummaryResult summary : summaries) {
-                    pw.println(summary.getSummary());
-                    double[] t = summary.getTValues();
-                    for (double val : t) {
-                        pw.print(val + " ");
+            try (PrintWriter writer = new PrintWriter(file)) {
+                for (LinguisticSummaryResult res : list) {
+                    writer.println(res.summary);
+                    for (double val : res.tValues) {
+                        writer.print(val + " ");
                     }
-                    pw.println();
+                    writer.println();
                 }
-                JOptionPane.showMessageDialog(this, "Saved successfully!");
+                JOptionPane.showMessageDialog(this, "Summaries saved successfully.");
             } catch (IOException ex) {
-                JOptionPane.showMessageDialog(this, "Error saving file: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Error saving summaries: " + ex.getMessage());
             }
         }
     }
 
+    // ========== Load summaries ==========
     private void loadSummaries(int tab) {
         JFileChooser fileChooser = new JFileChooser();
-        int option = fileChooser.showOpenDialog(this);
+        int result = fileChooser.showOpenDialog(this);
 
-        if (option == JFileChooser.APPROVE_OPTION) {
+        if (result == JFileChooser.APPROVE_OPTION) {
             File file = fileChooser.getSelectedFile();
+            List<LinguisticSummaryResult> targetList = (tab == 1) ? generatedSummaries1 : generatedSummaries2;
+            DefaultTableModel targetModel = (tab == 1) ? tableModel1 : tableModel2;
+            JTextArea targetArea = (tab == 1) ? resultArea1 : resultArea2;
 
-            try (BufferedReader br = new BufferedReader(new FileReader(file))) {
-                List<LinguisticSummaryResult> summaries = (tab == 1) ? generatedSummaries1 : generatedSummaries2;
-                DefaultTableModel targetModel = (tab == 1) ? tableModel1 : tableModel2;
-                targetModel.setRowCount(0);
-                summaries.clear();
+            targetList.clear();
+            targetModel.setRowCount(0);
+            targetArea.setText("");
 
+            try (BufferedReader reader = new BufferedReader(new FileReader(file))) {
                 String line;
-                while ((line = br.readLine()) != null) {
+                while ((line = reader.readLine()) != null) {
                     String summaryText = line;
-                    String valuesLine = br.readLine();
-                    if (valuesLine == null) break;
+                    String metricsLine = reader.readLine();
+                    if (metricsLine == null) break;
 
-                    String[] parts = valuesLine.trim().split("\\s+");
+                    String[] parts = metricsLine.trim().split("\\s+");
                     double[] metrics = new double[parts.length];
                     for (int i = 0; i < parts.length; i++) {
                         metrics[i] = Double.parseDouble(parts[i]);
                     }
-                    summaries.add(new LinguisticSummaryResult(summaryText, metrics));
+                    targetList.add(new LinguisticSummaryResult(summaryText, metrics));
 
-                    int columns = (tab == 1) ? 13 : 7;
-                    Object[] row = new Object[columns];
+                    Object[] row = new Object[13];
                     row[0] = summaryText;
-                    // Fill only columns available in the table, preventing index errors
-                    for (int i = 0; i < metrics.length && i + 1 < columns; i++) {
+                    for (int i = 0; i < metrics.length; i++) {
                         row[i + 1] = String.format("%.3f", metrics[i]);
                     }
                     targetModel.addRow(row);
                 }
-                JOptionPane.showMessageDialog(this, "Loaded successfully!");
+                JOptionPane.showMessageDialog(this, "Summaries loaded successfully.");
             } catch (IOException | NumberFormatException ex) {
-                JOptionPane.showMessageDialog(this, "Error loading file: " + ex.getMessage());
+                JOptionPane.showMessageDialog(this, "Error loading summaries: " + ex.getMessage());
             }
         }
     }
