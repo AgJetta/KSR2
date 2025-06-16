@@ -25,17 +25,12 @@ public class LinguisticSummaryCompound extends LinguisticSummary {
     }
 
     public double calculateT1(List<SongRecord> dataset) {
-        if (dataset.isEmpty()) {
-            System.err.println("Can't calculate a measure for an empty dataset!");
-            System.exit(1);
-        }
-
         double r = 0.0;
         double minMembership = 1.0; // Initialize to maximum possible membership value
         for (SongRecord song : dataset) {
             for (Summarizer summarizer : compoundSummarizer.getSummarizers()) {
                 double summarizerMembership = summarizer.getFuzzySet().getMembership(song.getAttribute(summarizer.getFieldName()));
-                if (summarizerMembership < minMembership) {
+                if (summarizerMembership < minMembership && summarizerMembership > 0) {
                     minMembership = summarizerMembership; // Find the minimum membership across all summarizers
                 }
             }
@@ -53,7 +48,7 @@ public class LinguisticSummaryCompound extends LinguisticSummary {
             System.exit(1);
         }
 
-        double summarizerFuzziness = 0.0;
+        double summarizerFuzziness = 1.0;
         for (Summarizer summarizer : compoundSummarizer.getSummarizers()) {
             summarizerFuzziness *= summarizer.getFuzzySet().degreeOfFuzziness();
         }

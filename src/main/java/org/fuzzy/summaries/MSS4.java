@@ -70,4 +70,14 @@ public class MSS4 {
         return String.format("%-140s" + " %.4f",
                 summaryString, t1);
     }
+
+    public void printLatexFuzzySummaryResults(List<SongRecord> dataset) {
+        double t1 = calculateT1(dataset);
+
+        String summaryString = generateSummary();
+        System.out.printf("%s", summaryString);
+        System.out.printf(" & %.4f", t1);
+        System.out.printf(" \\\\ %n");
+        System.out.println("\\midrule");
+    }
 }

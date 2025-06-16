@@ -22,8 +22,6 @@ public class MSS1 {
         this.quantifier = quantifier;
         this.summarizer = summarizer;
     }
-
-
     public Quantifier getQuantifier() {
         return quantifier;
     }
@@ -92,8 +90,17 @@ public class MSS1 {
                 summaryString, t1);
     }
 
-    @Override
     public String toString() {
         return generateSummary();
+    }
+
+    public void printLatexFuzzySummaryResults(List<SongRecord> dataset) {
+        double t1 = calculateT1(dataset);
+
+        String summaryString = generateSummary();
+        System.out.printf("%s", summaryString);
+        System.out.printf(" & %.4f", t1);
+        System.out.printf(" \\\\ %n");
+        System.out.println("\\midrule");
     }
 }
