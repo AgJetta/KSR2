@@ -44,8 +44,8 @@ public class DevMain {
             }
         }
 
-        Quantifier less_than_1000 = quantifiers.stream()
-                .filter(q -> q.getName().equals("WIĘCEJ NIŻ 1000"))
+        Quantifier one_third = quantifiers.stream()
+                .filter(q -> q.getName().equals("JEDNA TRZECIA (1/3)"))
                 .findFirst()
                 .orElseThrow(() -> new RuntimeException("Quantifier 'more than 1000' not found"));
         System.out.println("\n=== Second Order Summaries ===");
@@ -55,7 +55,7 @@ public class DevMain {
                 if (qualifier.equals(summarizer)) continue; // Skip self-qualifying
                 if (qualifier.linguisiticVariable.equals(summarizer.linguisiticVariable)) continue; // Skip same linguistic variable
                 LinguisticSummary secondOrderSummary = new SecondOrderLinguisticSummary(
-                        less_than_1000, "utworów", summarizer, qualifier);
+                        one_third, "utworów", summarizer, qualifier);
                 System.out.println(secondOrderSummary.generateSummaryWithMeasures(dataset));
 //                secondOrderSummary.printLatexFuzzySummaryResults(dataset);
             }

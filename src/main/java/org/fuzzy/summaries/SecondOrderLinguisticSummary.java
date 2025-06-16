@@ -24,6 +24,11 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
             System.exit(1);
         }
 
+        if (!quantifier.isRelative()) {
+            System.err.println("Second order summaries only support relative quantifiers!");
+            System.exit(1);
+        }
+
         // Calculate r - sum of membership degrees in summarizer
         FuzzySet intersection = summarizer.getFuzzySet().intersection(
                 qualifier.getFuzzySet());
@@ -63,7 +68,7 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
     public double calculateT10(List<SongRecord> dataset) {
         double qualifierCardinality = 0.0;
         for (SongRecord record : dataset) {
-            double membership = qualifier.getFuzzySet().getMembership(record.getAttribute(qualifier.getName()));
+            double membership = qualifier.getFuzzySet().getMembership(record.getAttribute(qualifier.getFieldName()));
             qualifierCardinality += membership;
         }
         Universe universe = qualifier.getFuzzySet().getUniverse();

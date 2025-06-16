@@ -13,9 +13,9 @@
       "relative": true,
       "functionType": "triangular",
       "parameters": [
-        0.25,
+        0.24,
         0.5,
-        0.75
+        0.76
       ],
       "universe": [
         0,
@@ -27,7 +27,7 @@
       "relative": true,
       "functionType": "triangular",
       "parameters": [
-        0.8,
+        0.74,
         1.0,
         2
       ],

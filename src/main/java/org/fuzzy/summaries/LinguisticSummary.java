@@ -99,9 +99,6 @@ public class LinguisticSummary {
     }
 
     public double calculateT6(List<SongRecord> dataset) {
-        if (this.quantifier.getName().equals("MNIEJ NIŻ 100")) {
-            System.out.println("");
-        }
         double quantifierSupportCardinality = quantifier.getSupportCardinalNumber();
         Universe universe = quantifier.getFuzzySet().getUniverse();
         double m = quantifier.isRelative() ? 1.0 : universe.getCardinalNumber();
@@ -118,7 +115,7 @@ public class LinguisticSummary {
         // How cardinality of a quantifier is supposed to be less than 1 ??!!!
         double quantifierCardinality = 0.0;
         for (SongRecord record : dataset) {
-            double membership = quantifier.getFuzzySet().getMembership(record.getAttribute(quantifier.getName()));
+            double membership = quantifier.getFuzzySet().getMembership(record.getAttribute(quantifier.getFieldName()));
             quantifierCardinality += membership;
         }
         Universe universe = quantifier.getFuzzySet().getUniverse();
@@ -130,7 +127,7 @@ public class LinguisticSummary {
     public double calculateT8(List<SongRecord> dataset) {
         double summarizerCardinality = 0.0;
         for (SongRecord record : dataset) {
-            double membership = summarizer.getFuzzySet().getMembership(record.getAttribute(summarizer.getName()));
+            double membership = summarizer.getFuzzySet().getMembership(record.getAttribute(summarizer.getFieldName()));
             summarizerCardinality += membership;
         }
         Universe universe = summarizer.getFuzzySet().getUniverse();

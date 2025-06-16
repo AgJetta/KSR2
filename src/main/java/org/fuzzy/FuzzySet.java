@@ -77,6 +77,9 @@ public class FuzzySet {
         }
     }
 
+    public MembershipFunction getMembershipFunction() {
+        return membershipFunction;
+    }
     public void setFieldName(String fieldName) {
         this.fieldName = fieldName;
     }

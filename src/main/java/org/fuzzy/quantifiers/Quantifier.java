@@ -33,9 +33,9 @@ public class Quantifier extends Summarizer {
     public double getMembership(double r, int m) {
         if (isRelative) {
             double proportion = m > 0 ? r / m : 0.0;
-            return fuzzySet.getMembership(proportion);
+            return fuzzySet.getMembershipFunction().apply(proportion);
         } else {
-            return fuzzySet.getMembership(r);
+            return fuzzySet.getMembershipFunction().apply(r);
         }
     }
 
