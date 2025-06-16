@@ -1,10 +1,7 @@
 package org.fuzzy;
 
 import org.fuzzy.quantifiers.Quantifier;
-import org.fuzzy.summaries.LinguisticSummary;
-import org.fuzzy.summaries.MSS1;
-import org.fuzzy.summaries.MSS2;
-import org.fuzzy.summaries.SecondOrderLinguisticSummary;
+import org.fuzzy.summaries.*;
 import org.fuzzy.summarizer.Summarizer;
 
 import java.util.*;
@@ -52,6 +49,14 @@ public class DevMain {
                 if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
                 MSS1 mss2 = new MSS2(predicate1, predicate2, testQuantifier, summarizer1, summarizer2);
                 System.out.println(mss2.generateSummaryWithMeasures(dataset));
+            }
+        }
+        // MSS3
+        for (Summarizer summarizer1 : summarizers) {
+            for (Summarizer summarizer2 : summarizers) {
+                if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
+                MSS2 mss3 = new MSS3(predicate1, predicate2, testQuantifier, summarizer1, summarizer2);
+                System.out.println(mss3.generateSummaryWithMeasures(dataset));
             }
         }
 
