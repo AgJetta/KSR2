@@ -10,6 +10,7 @@ import java.util.List;
 
 public class SecondOrderLinguisticSummary extends LinguisticSummary{
     private Summarizer qualifier;
+    protected String summaryType = "1S F2";
 
     public SecondOrderLinguisticSummary(Quantifier quantifier, String predicate,
                                         Summarizer summarizer, Summarizer qualifier) {
@@ -79,7 +80,8 @@ public class SecondOrderLinguisticSummary extends LinguisticSummary{
 
     @Override
     public String generateSummary() {
-        return String.format("%s %s które są/mają [%s %s] są/mają [%s %s]",
+        return String.format("%s | %s %s które są/mają [%s %s] są/mają [%s %s]",
+                summaryType,
                 quantifier.getName(),
                 predicate,
                 qualifier.getName(),

@@ -7,7 +7,7 @@ import org.fuzzy.summarizer.Summarizer;
 import java.util.List;
 
 public class MSS3 extends MSS2 {
-
+    protected String summaryType = "2S F3";
     public MSS3(String predicate1, String predicate2, Quantifier quantifier, Summarizer summarizer, Summarizer summarizer2) {
         super(predicate1, predicate2, quantifier, summarizer, summarizer2);
     }

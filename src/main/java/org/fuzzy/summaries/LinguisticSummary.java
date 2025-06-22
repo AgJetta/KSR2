@@ -16,6 +16,8 @@ public class LinguisticSummary {
 
     protected final List<Double> measureWeights = Arrays.asList(0.2, 0.05, 0.05, 0.2, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1);
 
+    protected String summaryType = "1S F1";
+
     public LinguisticSummary(Quantifier quantifier, String predicate, Summarizer summarizer) {
         this.quantifier = quantifier;
         this.predicate = predicate;
@@ -162,7 +164,8 @@ public class LinguisticSummary {
 
     // Generate natural language summary
     public String generateSummary() {
-        return String.format("%s %s są/mają [%s %s]",
+        return String.format("%s | %s %s są/mają [%s %s]",
+                summaryType,
                 quantifier.getName(),
                 predicate,
                 summarizer.getName(),

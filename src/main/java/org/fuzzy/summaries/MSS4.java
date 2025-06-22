@@ -11,6 +11,7 @@ public class MSS4 {
     protected final String predicate2;
 
     protected final Summarizer summarizer;
+    protected String summaryType = "2S F4";
 
     public MSS4(String predicate1, String predicate2, Summarizer summarizer) {
         this.predicate1 = predicate1;

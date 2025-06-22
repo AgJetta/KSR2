@@ -10,6 +10,7 @@ import java.util.List;
 public class MSS2 extends MSS1 {
 
     protected Summarizer summarizer2;
+    protected String summaryType = "2S F2";
 
     public MSS2(String predicate1, String predicate2, Quantifier quantifier, Summarizer summarizer, Summarizer summarizer2) {
         super(predicate1, predicate2, quantifier, summarizer);
