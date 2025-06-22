@@ -59,7 +59,8 @@ public class MSS3 extends MSS2 {
     // Generate natural language summary
     @Override
     public String generateSummary() {
-        return String.format("%s utworów %s będących [%s %s] w odniesieniu do %s  jest [%s %s]",
+        return String.format("%s | %s utworów %s będących [%s %s] w odniesieniu do %s  jest [%s %s]",
+                summaryType,
                 quantifier.getName(),
                 predicate1.toUpperCase(),
                 summarizer2.getName(),

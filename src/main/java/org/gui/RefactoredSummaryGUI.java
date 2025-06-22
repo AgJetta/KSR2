@@ -4,8 +4,8 @@ import org.dataImport.ConfigImporter;
 import org.dataImport.CsvSongImporter;
 import org.fuzzy.SongRecord;
 import org.fuzzy.quantifiers.Quantifier;
+import org.fuzzy.summaries.*;
 import org.fuzzy.summarizer.Summarizer;
-import org.fuzzy.summaries.LinguisticSummary;
 
 import javax.swing.*;
 import javax.swing.table.DefaultTableCellRenderer;
@@ -39,7 +39,7 @@ public class RefactoredSummaryGUI extends JFrame {
     private JLabel statusLabel;
 
     private final static String[] predicates = {
-            "ROCK", "RAP", "EDM", "LATIN"
+            "rock", "rap", "edm", "latin"
     };
 
     private final static String NO_PREDICATE = "";
@@ -202,7 +202,7 @@ public class RefactoredSummaryGUI extends JFrame {
 
         // Configure column widths
         TableColumn summaryColumn = resultsTable.getColumnModel().getColumn(0);
-        summaryColumn.setPreferredWidth(500);
+        summaryColumn.setPreferredWidth(750);
 
         // Right-align numeric columns
         DefaultTableCellRenderer rightRenderer = new DefaultTableCellRenderer();
@@ -213,7 +213,7 @@ public class RefactoredSummaryGUI extends JFrame {
         }
 
         JScrollPane tableScrollPane = new JScrollPane(resultsTable);
-        tableScrollPane.setPreferredSize(new Dimension(1200, 400));
+        tableScrollPane.setPreferredSize(new Dimension(1200, 600));
 
         resultsPanel.add(tableScrollPane, BorderLayout.CENTER);
 
@@ -235,12 +235,23 @@ public class RefactoredSummaryGUI extends JFrame {
             statusLabel.setForeground(Color.RED);
             return;
         }
+        List<String> selectedPredicates = new ArrayList<>();
+        selectedPredicates.add(predicate1);
+        assert predicate2 != null;
+        if (!predicate2.equals(NO_PREDICATE)) {
+            selectedPredicates.add(predicate2);
+        }
+        if (predicate1.equals(predicate2)){
+            statusLabel.setText("Both predicates cannot be the same");
+            statusLabel.setForeground(Color.RED);
+            return;
+        }
 
         // Get selected summarizers for combination
-        List<Integer> selectedIndices = Arrays.stream(summarizerSelectionList.getSelectedIndices())
+        List<Integer> selectedSummarizerIndices = Arrays.stream(summarizerSelectionList.getSelectedIndices())
                 .boxed().collect(Collectors.toList());
 
-        if (selectedIndices.isEmpty()) {
+        if (selectedSummarizerIndices.isEmpty()) {
             statusLabel.setText("Please select at least one summarizer for combination");
             statusLabel.setForeground(Color.RED);
             return;
@@ -249,43 +260,221 @@ public class RefactoredSummaryGUI extends JFrame {
         int totalCombinations = 0;
         int filteredCombinations = 0;
 
-        // Generate combinations
-        for (int summarizerIndex : selectedIndices) {
-            Summarizer combinationSummarizer = summarizers.get(summarizerIndex);
+        // Generate all first-order summaries
+        for (int summarizerIndex : selectedSummarizerIndices) {
+            Summarizer summarizer = summarizers.get(summarizerIndex);
             for (Quantifier quantifier : quantifiers) {
-//                if (quantifier.isRelative() && predicate2.equals(NO_PREDICATE)) {
-//                    continue; // Skip if relative quantifier and no second predicate
-//                }
-                // Create linguistic summary
-                LinguisticSummary summary = new LinguisticSummary(
-                        quantifier,
-                        predicate1,
-                        combinationSummarizer
-                );
+                for (String predicate : selectedPredicates) {
+                    LinguisticSummary summary = new LinguisticSummary(
+                            quantifier,
+                            predicate,
+                            summarizer
+                    );
 
-                // Calculate all T values
-                double[] tValues = calculateAllTValues(summary);
-                double t1 = tValues[0]; // Optimal is at index 11
+                    // Calculate all T values
+                    double[] tValues = calculateAllTValues(summary);
+                    double t1 = tValues[0]; // Optimal is at index 11
 
-                totalCombinations++;
+                    totalCombinations++;
 
-                // Filter out zero/low values (you can adjust this threshold)
-                if (t1 > 0.001) { // Using small threshold instead of exactly 0
-                    String summaryText = summary.generateSummary();
-                    SummaryResult result = new SummaryResult(summaryText, tValues);
-                    allResults.add(result);
-                    addResultToTable(result);
-                    filteredCombinations++;
+                    // Filter out zero/low values (you can adjust this threshold)
+                    if (t1 > 0.001) { // Using small threshold instead of exactly 0
+                        String summaryText = summary.generateSummary();
+                        SummaryResult result = new SummaryResult(summaryText, tValues);
+                        allResults.add(result);
+                        addResultToTable(result);
+                        filteredCombinations++;
+                    }
                 }
             }
-
         }
+
+        // Generate all second-order summaries
+        for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
+            for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
+                if (i == j) continue; // Skip same summarizer combination
+                Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
+                Summarizer summarizer2 = summarizers.get(selectedSummarizerIndices.get(j));
+
+                for (Quantifier quantifier : quantifiers) {
+                    if (!quantifier.isRelative()) {continue;}
+                    LinguisticSummary summary = new SecondOrderLinguisticSummary(
+                            quantifier,
+                            predicate1,
+                            summarizer1,
+                            summarizer2
+                    );
+
+                    // Calculate all T values
+                    double[] tValues = calculateAllTValues(summary);
+                    double t1 = tValues[0]; // Optimal is at index 11
+
+                    totalCombinations++;
+
+                    // Filter out zero/low values (you can adjust this threshold)
+                    if (t1 > 0.001) { // Using small threshold instead of exactly 0
+                        String summaryText = summary.generateSummary();
+                        SummaryResult result = new SummaryResult(summaryText, tValues);
+                        allResults.add(result);
+                        addResultToTable(result);
+                        filteredCombinations++;
+                    }
+                }
+            }
+        }
+
+        if (predicate2.equals(NO_PREDICATE)) {
+            statusLabel.setText(String.format("Generated %d first-order combinations, %d passed filter",
+                    totalCombinations, filteredCombinations));
+            statusLabel.setForeground(Color.GREEN);
+            return;
+        }
+
+        // MSS1
+        for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
+            Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
+
+            for (Quantifier quantifier : quantifiers) {
+                if (!quantifier.isRelative()) {continue;}
+                MSS1 summary = new MSS1(
+                        predicate1,
+                        predicate2,
+                        quantifier,
+                        summarizer1
+                );
+
+                int[] counts = addMSSResults(summary);
+                totalCombinations += counts[0];
+                filteredCombinations += counts[1];
+
+                // MSS1 Reversed predicates
+                MSS1 summaryReversed = new MSS1(
+                        predicate2,
+                        predicate1,
+                        quantifier,
+                        summarizer1
+                );
+
+                int[] countsReversed = addMSSResults(summaryReversed);
+                totalCombinations += countsReversed[0];
+                filteredCombinations += countsReversed[1];
+            }
+        }
+
+        // MSS2, MSS3
+        for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
+            for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
+                if (i == j) continue; // Skip same summarizer combination
+                Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
+                Summarizer summarizer2 = summarizers.get(selectedSummarizerIndices.get(j));
+
+                for (Quantifier quantifier : quantifiers) {
+                    if (!quantifier.isRelative()) {continue;}
+                    MSS2 summary = new MSS2(
+                            predicate1,
+                            predicate2,
+                            quantifier,
+                            summarizer1,
+                            summarizer2
+                    );
+
+                    int[] counts = addMSSResults(summary);
+                    totalCombinations += counts[0];
+                    filteredCombinations += counts[1];
+
+                    // MSS2 Reversed predicates
+                    MSS2 summaryReversed = new MSS2(
+                            predicate2,
+                            predicate1,
+                            quantifier,
+                            summarizer1,
+                            summarizer2
+                    );
+
+                    int[] countsReversed = addMSSResults(summaryReversed);
+                    totalCombinations += countsReversed[0];
+                    filteredCombinations += countsReversed[1];
+
+                    // MSS3
+                    MSS2 summary3 = new MSS3(
+                            predicate1,
+                            predicate2,
+                            quantifier,
+                            summarizer1,
+                            summarizer2
+                    );
+
+                    int[] counts3 = addMSSResults(summary3);
+                    totalCombinations += counts3[0];
+                    filteredCombinations += counts3[1];
+
+                    // MSS3 Reversed predicates
+                    MSS2 summary3Reversed = new MSS3(
+                            predicate2,
+                            predicate1,
+                            quantifier,
+                            summarizer1,
+                            summarizer2
+                    );
+
+                    int[] counts3Reversed = addMSSResults(summary3Reversed);
+                    totalCombinations += counts3Reversed[0];
+                    filteredCombinations += counts3Reversed[1];
+                }
+            }
+        }
+        // MSS4
+        for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
+                Summarizer summarizer = summarizers.get(selectedSummarizerIndices.get(i));
+
+                MSS4 summary = new MSS4(
+                        predicate1,
+                        predicate2,
+                        summarizer
+                );
+
+                int[] counts = addMSSResults(summary);
+                totalCombinations += counts[0];
+                filteredCombinations += counts[1];
+
+                // MSS4 Reversed predicates
+                MSS4 summaryReversed = new MSS4(
+                        predicate2,
+                        predicate1,
+                        summarizer
+                );
+
+                int[] countsReversed = addMSSResults(summaryReversed);
+                totalCombinations += countsReversed[0];
+                filteredCombinations += countsReversed[1];
+            }
+
 
         statusLabel.setText(String.format("Generated %d combinations, %d passed filter",
                 totalCombinations, filteredCombinations));
         statusLabel.setForeground(Color.GREEN);
     }
 
+    private int[] addMSSResults(MSS1 summary) {
+        int totalCombinations = 0;
+        int filteredCombinations = 0;
+        // Calculate all T values
+        double[] tValues = new double[12];
+        tValues[0] = summary.calculateT1(dataset);
+        for (int j = 1; j < 12; j++) {
+            tValues[j] = 0.0;
+        }
+        totalCombinations++;
+        // Filter out zero/low values (you can adjust this threshold)
+        if (tValues[0] > 0.001) { // Using small threshold instead of exactly 0
+            String summaryText = summary.generateSummary();
+            SummaryResult result = new SummaryResult(summaryText, tValues);
+            allResults.add(result);
+            addResultToTable(result);
+            filteredCombinations++;
+        }
+        return new int[]{totalCombinations, filteredCombinations};
+    }
     private double[] calculateAllTValues(LinguisticSummary summary) {
         double[] values = new double[12];
         values[0] = summary.calculateT1(dataset);
@@ -411,8 +600,8 @@ public class RefactoredSummaryGUI extends JFrame {
         // Style table
         resultsTable.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
         resultsTable.getTableHeader().setFont(boldFont);
-        resultsTable.setBackground(new Color(236, 203, 252));
-        resultsTable.setForeground(new Color(199, 21, 133));
+        resultsTable.setBackground(new Color(160, 160, 160));
+        resultsTable.setForeground(new Color(255, 255, 255));
 
         // Style buttons
         for (Component comp : getContentPane().getComponents()) {

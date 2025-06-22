@@ -73,7 +73,8 @@ public class MSS1 {
 
     // Generate natural language summary
     public String generateSummary() {
-        return String.format("%s utworów %s w odniesieniu do %s jest [%s %s]",
+        return String.format("%s | %s utworów %s w odniesieniu do %s jest [%s %s]",
+                summaryType,
                 quantifier.getName(),
                 predicate1.toUpperCase(),
                 predicate2.toUpperCase(),

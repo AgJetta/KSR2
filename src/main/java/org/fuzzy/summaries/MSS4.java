@@ -6,7 +6,7 @@ import org.fuzzy.summarizer.Summarizer;
 import java.util.List;
 
 // MultiSubject Summary Form 1
-public class MSS4 {
+public class MSS4 extends MSS1 {
     protected final String predicate1;
     protected final String predicate2;
 
@@ -14,21 +14,26 @@ public class MSS4 {
     protected String summaryType = "2S F4";
 
     public MSS4(String predicate1, String predicate2, Summarizer summarizer) {
+        super(predicate1, predicate2, null, summarizer);
         this.predicate1 = predicate1;
         this.predicate2 = predicate2;
         this.summarizer = summarizer;
     }
 
+    @Override
     public String getPredicate1() {
         return predicate1;
     }
+    @Override
     public String getPredicate2() { return predicate2; }
 
+    @Override
     public Summarizer getSummarizer() {
         return summarizer;
     }
 
     // Calculate T1 (degree of truth)
+    @Override
     public double calculateT1(List<SongRecord> dataset) {
         // Filter in records which have value SongRecord.genreStringToDouble(predicate1) against key 'playlist_genre'
         List<SongRecord> songsPredicate1 = dataset.stream()
@@ -54,8 +59,10 @@ public class MSS4 {
     private double implicatorReichenbach(double a, double b) { return 1 - a + a*b; }
 
     // Generate natural language summary
+    @Override
     public String generateSummary() {
-        return String.format("Więcej utworów %s niż %s jest [%s %s]",
+        return String.format("%s | Więcej utworów %s niż %s jest [%s %s]",
+                summaryType,
                 predicate1.toUpperCase(),
                 predicate2.toUpperCase(),
                 summarizer.getName(),
@@ -64,6 +71,7 @@ public class MSS4 {
     }
 
     // Generate summary with T1 value
+    @Override
     public String generateSummaryWithMeasures(List<SongRecord> dataset) {
         double t1 = calculateT1(dataset);
 
@@ -72,6 +80,7 @@ public class MSS4 {
                 summaryString, t1);
     }
 
+    @Override
     public void printLatexFuzzySummaryResults(List<SongRecord> dataset) {
         double t1 = calculateT1(dataset);
 
