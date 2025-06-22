@@ -306,8 +306,8 @@
           "name": "Unplugged",
           "functionType": "trapezoidal",
           "parameters": [
+            0.8,
             0.9,
-            1.0,
             1.0,
             1.1
           ]
@@ -318,7 +318,7 @@
       "name": "Tempo",
       "fieldName": "tempo",
       "universe": [
-        0,
+        50,
         250
       ],
       "terms": [
@@ -506,10 +506,10 @@
       "terms": [
         {
           "name": "Uspokajająca",
-          "functionType": "crisp",
+          "functionType": "rampDown",
           "parameters": [
             0.0,
-            0.3
+            0.35
           ]
         },
         {
@@ -523,9 +523,9 @@
         },
         {
           "name": "Bardzo Energiczna",
-          "functionType": "crisp",
+          "functionType": "rampUp",
           "parameters": [
-            0.7,
+            0.65,
             1.0
           ]
         }
