@@ -268,7 +268,7 @@ public class RefactoredSummaryGUI extends JFrame {
                 for (String predicate : selectedPredicates) {
                     LinguisticSummary summary = new LinguisticSummary(
                             quantifier,
-                            predicate,
+                            "utworów",
                             summarizer
                     );
 
@@ -301,7 +301,7 @@ public class RefactoredSummaryGUI extends JFrame {
                     if (!quantifier.isRelative()) {continue;}
                     LinguisticSummary summary = new SecondOrderLinguisticSummary(
                             quantifier,
-                            predicate1,
+                            "utworów",
                             summarizer1,
                             summarizer2
                     );
