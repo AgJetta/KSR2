@@ -5,6 +5,7 @@ import org.dataImport.CsvSongImporter;
 import org.fuzzy.SongRecord;
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summaries.*;
+import org.fuzzy.summarizer.CompoundSummarizer;
 import org.fuzzy.summarizer.Summarizer;
 
 import javax.swing.*;
@@ -313,6 +314,46 @@ public class RefactoredSummaryGUI extends JFrame {
 
                     // Filter out zero/low values (you can adjust this threshold)
                     if (t1 > 0.001) { // Using small threshold instead of exactly 0
+                        String summaryText = summary.generateSummary();
+                        SummaryResult result = new SummaryResult(summaryText, tValues);
+                        allResults.add(result);
+                        addResultToTable(result);
+                        filteredCombinations++;
+                    }
+                }
+            }
+        }
+
+        // Compound Summarizer
+        // Generate all second-order summaries
+        for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
+            for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
+                if (i == j) continue; // Skip same summarizer combination
+                Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
+                Summarizer summarizer2 = summarizers.get(selectedSummarizerIndices.get(j));
+
+                for (Quantifier quantifier : quantifiers) {
+                    if (!quantifier.isRelative()) {continue;}
+                    List<Summarizer> summarizers = new ArrayList<>();
+                    summarizers.add(summarizer1);
+                    summarizers.add(summarizer2);
+                    CompoundSummarizer compoundSummarizer = new CompoundSummarizer(
+                        summarizers
+                    );
+                    LinguisticSummaryCompound summary = new LinguisticSummaryCompound(
+                        quantifier,
+                        predicate1,
+                        compoundSummarizer
+                    );
+
+                    // Calculate all T values
+                    double[] tValues = calculateAllTValues(summary);
+                    double t1 = tValues[0];
+
+                    totalCombinations++;
+
+                    // Filter out zero/low values
+                    if (t1 > 0.001) {
                         String summaryText = summary.generateSummary();
                         SummaryResult result = new SummaryResult(summaryText, tValues);
                         allResults.add(result);
