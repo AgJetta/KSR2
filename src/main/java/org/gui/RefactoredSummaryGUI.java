@@ -14,6 +14,8 @@ import javax.swing.table.DefaultTableModel;
 import javax.swing.table.TableColumn;
 import java.awt.*;
 import java.awt.event.ActionEvent;
+import java.awt.event.FocusAdapter;
+import java.awt.event.FocusEvent;
 import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -42,6 +44,10 @@ public class RefactoredSummaryGUI extends JFrame {
     private final static String[] predicates = {
             "rock", "rap", "edm", "latin"
     };
+
+    private List<Double> measureWeights = Arrays.asList(0.2, 0.05, 0.05, 0.2, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1);
+
+    private JTextField[] weightFields;
 
     private final static String NO_PREDICATE = "";
     // Generated results storage
@@ -111,7 +117,46 @@ public class RefactoredSummaryGUI extends JFrame {
 
         predicatePanel.add(firstPredicatePanel);
 
+        // Measure Weights Panel
+        JPanel weightsPanel = new JPanel();
+        weightsPanel.setBorder(BorderFactory.createTitledBorder("Measure Weights"));
+        weightsPanel.setLayout(new GridLayout(5, 4, 2, 2)); // 5 rows, 4 columns (2 labels + 2 fields per row)
+
+        // Initialize weight fields array
+        weightFields = new JTextField[10];
+        String[] weightLabels = {
+                "Weight 1:", "Weight 2:", "Weight 3:", "Weight 4:", "Weight 5:",
+                "Weight 6:", "Weight 7:", "Weight 8:", "Weight 9:", "Weight 10:"
+        };
+
+        // Create weight input fields with default values
+        for (int i = 0; i < 10; i++) {
+            JLabel label = new JLabel(weightLabels[i]);
+            weightFields[i] = new JTextField(8);
+            weightFields[i].setText(String.valueOf(measureWeights.get(i)));
+
+            weightsPanel.add(label);
+            weightsPanel.add(weightFields[i]);
+        }
+
+        predicatePanel.add(weightsPanel);
         add(predicatePanel, BorderLayout.NORTH);
+    }
+
+    // Method to update the measureWeights list from the text fields
+    private void updateMeasureWeights() {
+        for (int i = 0; i < 10; i++) {
+            try {
+                double value = Double.parseDouble(weightFields[i].getText());
+                measureWeights.set(i, value);
+            } catch (NumberFormatException e) {           }
+        }
+    }
+
+    // Method to get current weights (useful for other parts of your application)
+    public List<Double> getMeasureWeights() {
+        updateMeasureWeights();
+        return new ArrayList<>(measureWeights);
     }
 
     private void createSummarizerSelectionPanel() {
@@ -214,7 +259,7 @@ public class RefactoredSummaryGUI extends JFrame {
         }
 
         JScrollPane tableScrollPane = new JScrollPane(resultsTable);
-        tableScrollPane.setPreferredSize(new Dimension(1200, 600));
+        tableScrollPane.setPreferredSize(new Dimension(1200, 500));
 
         resultsPanel.add(tableScrollPane, BorderLayout.CENTER);
 
@@ -271,6 +316,7 @@ public class RefactoredSummaryGUI extends JFrame {
                             "utworów",
                             summarizer
                     );
+                    summary.setMeasureWeights(getMeasureWeights());
 
                     // Calculate all T values
                     double[] tValues = calculateAllTValues(summary);
@@ -305,6 +351,7 @@ public class RefactoredSummaryGUI extends JFrame {
                             summarizer1,
                             summarizer2
                     );
+                    summary.setMeasureWeights(getMeasureWeights());
 
                     // Calculate all T values
                     double[] tValues = calculateAllTValues(summary);

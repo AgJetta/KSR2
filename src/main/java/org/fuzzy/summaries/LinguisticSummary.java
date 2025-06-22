@@ -14,7 +14,19 @@ public class LinguisticSummary {
     protected final String predicate;
     protected final Summarizer summarizer;
 
-    protected final List<Double> measureWeights = Arrays.asList(0.2, 0.05, 0.05, 0.2, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1);
+    public void setMeasureWeights(List<Double> measureWeights) {
+        if (measureWeights.size() != 10) {
+            throw new IllegalArgumentException("Measure weights must contain exactly 10 values.");
+        }
+        // Should sum up to 1
+        double sum = measureWeights.stream().mapToDouble(Double::doubleValue).sum();
+        if (Math.abs(sum - 1.0) > 1e-9) {
+            throw new IllegalArgumentException("Measure weights must sum up to 1.");
+        }
+        this.measureWeights = measureWeights;
+    }
+
+    protected static List<Double> measureWeights = Arrays.asList(0.2, 0.05, 0.05, 0.2, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1);
 
     protected String summaryType = "1S F1";
 
