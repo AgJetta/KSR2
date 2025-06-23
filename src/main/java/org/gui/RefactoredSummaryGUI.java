@@ -44,7 +44,7 @@ public class RefactoredSummaryGUI extends JFrame {
     private JLabel statusLabel;
 
     private final static String[] predicates = {
-            "rock", "rap", "edm", "latin"
+            "rock", "rap", "edm", "latin", "pop"
     };
 
     private List<Double> measureWeights = Arrays.asList(0.2, 0.05, 0.05, 0.2, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1);
@@ -170,6 +170,7 @@ public class RefactoredSummaryGUI extends JFrame {
                 Quantifier newQuantifier = new Quantifier(name, fuzzySet, isRelative, universe[0], universe[1]);
 
                 quantifiers.add(newQuantifier);
+                newQuantifier.connectDataset(dataset);
                 updateTableFromQuantifiers(tableModel);
 
             } catch (Exception ex) {
