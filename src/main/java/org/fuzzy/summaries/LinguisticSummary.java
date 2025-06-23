@@ -84,9 +84,10 @@ public class LinguisticSummary {
     }
 
     public double calculateT3(List<SongRecord> dataset){
-        double t = dataset.size();
+//        double t = dataset.size();
+        double temp = summarizer.getFuzzySet().support().cardinalNumber();
         double h = dataset.size();
-        return t / h;
+        return temp / h;
     }
 
     public double calculateT4(List<SongRecord> dataset) {
