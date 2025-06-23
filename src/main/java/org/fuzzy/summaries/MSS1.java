@@ -15,7 +15,7 @@ public class MSS1 {
     protected final Quantifier quantifier;
 
     protected final Summarizer summarizer;
-    protected String summaryType = "1S F1";
+    protected String summaryType = "2S F1";
 
     public MSS1(String predicate1, String predicate2, Quantifier quantifier, Summarizer summarizer) {
         this.predicate1 = predicate1;
