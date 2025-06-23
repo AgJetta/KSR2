@@ -8,6 +8,23 @@ import org.fuzzy.summarizer.Summarizer;
 // Quantifier class inheriting from Summarizer
 public class Quantifier extends Summarizer {
     private final boolean isRelative;
+
+    public double getStart() {
+        return start;
+    }
+
+    public void setStart(double start) {
+        this.start = start;
+    }
+
+    public double getEnd() {
+        return end;
+    }
+
+    public void setEnd(double end) {
+        this.end = end;
+    }
+
     private double start;
     private double end;
 
@@ -24,6 +41,7 @@ public class Quantifier extends Summarizer {
         this.start = start;
         this.end = end;
     }
+
 
     public boolean isRelative() {
         return isRelative;

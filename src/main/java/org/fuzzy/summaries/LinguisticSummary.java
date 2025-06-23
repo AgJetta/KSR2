@@ -127,12 +127,13 @@ public class LinguisticSummary {
 
     public double calculateT7(List<SongRecord> dataset) {
 
-        // How cardinality of a quantifier is supposed to be less than 1 ??!!!
         double quantifierCardinality = 0.0;
-        for (SongRecord record : dataset) {
-            double membership = quantifier.getFuzzySet().getMembership(record.getAttribute(quantifier.getFieldName()));
-            quantifierCardinality += membership;
-        }
+//        for (SongRecord record : dataset) {
+//            double membership = quantifier.getFuzzySet().getMembership(record.getAttribute(quantifier.getFieldName()));
+//            quantifierCardinality += membership;
+//        }
+
+        quantifierCardinality = quantifier.getEnd() - quantifier.getStart();
         Universe universe = quantifier.getFuzzySet().getUniverse();
         double universeSize = universe.getCardinalNumber();
 

@@ -16,6 +16,10 @@ public class FuzzySet {
     private List<SongRecord> data = null; // List of song records for this fuzzy set
     private String fieldName = null; // Field name for the fuzzy set, used for connecting to datasets
 
+    private double mfBeginning = 0.0;
+
+    private double mfEnd = 0.0;
+
     // Constructor for fuzzy set with explicit memberships
     public FuzzySet(Universe universe, MembershipFunction membershipFunction, Map<Double, Double> memberships) {
         this.universe = universe;
