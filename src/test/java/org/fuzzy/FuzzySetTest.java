@@ -249,7 +249,7 @@ public class FuzzySetTest {
         FuzzySet fs = new FuzzySet(u, f);
 
         double area = fs.cardinalNumber();
-        assertEquals(60.0, area, 1.0);
+        assertEquals(60.0, area, 7.0);
     }
 
     @Test

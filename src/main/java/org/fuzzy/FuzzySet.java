@@ -38,6 +38,10 @@ public class FuzzySet {
     }
 
     public double getMembership(double x) {
+        if (isClassic && !universe.isDense()) {
+            return membershipCache.getOrDefault(x, 0.0);
+        }
+
         if (membershipCache.containsKey(x)) {
             return membershipCache.get(x);
         }
