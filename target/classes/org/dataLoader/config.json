@@ -374,7 +374,7 @@
     },
     {
       "name": "Instrumentalność",
-      "fieldName": "instrumentalnosc",
+      "fieldName": "instrumentalness",
       "universe": [
         0.0,
         1.0
@@ -414,7 +414,7 @@
     },
     {
       "name": "Żywość",
-      "fieldName": "zywosc",
+      "fieldName": "liveness",
       "universe": [
         0.0,
         1.0
@@ -462,7 +462,7 @@
     },
     {
       "name": "Pozytywność nastroju",
-      "fieldName": "nastroj",
+      "fieldName": "valence",
       "universe": [
         0.0,
         1.0
@@ -498,7 +498,7 @@
     },
     {
       "name": "Energia",
-      "fieldName": "energia",
+      "fieldName": "energy",
       "universe": [
         0.0,
         1.0
