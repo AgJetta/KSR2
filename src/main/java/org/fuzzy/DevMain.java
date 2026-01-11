@@ -2,6 +2,10 @@ package org.fuzzy;
 
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summaries.LinguisticSummary;
+import org.fuzzy.summaries.MSS1;
+import org.fuzzy.summaries.MSS2;
+import org.fuzzy.summaries.MSS3;
+import org.fuzzy.summaries.MSS4;
 import org.fuzzy.summarizer.Summarizer;
 
 import java.util.*;
@@ -209,6 +213,55 @@ public class DevMain {
             System.out.println("T10 (Qualifier Cardinality):     " + String.format("%.4f", testSummaryF2.calculateT10(dataset)));
             System.out.println("T11 (Length of Qualifier):       " + String.format("%.4f", testSummaryF2.calculateT11(dataset)));
             System.out.println("\nOptimal (Weighted Average):      " + String.format("%.4f", testSummaryF2.calculateOptimal(dataset)));
+        }
+
+        System.out.println("\n\n=== MULTI-SUBJECT SUMMARIES (MSS) ===\n");
+
+        if (aboutHalf != null && energiczna != null && glosna != null) {
+            System.out.println("MSS examples comparing 'rap' vs 'pop' genres:\n");
+            System.out.println(String.format("%-85s | %6s", "Summary", "T1"));
+            System.out.println("-".repeat(95));
+
+            double rapValue = SongRecord.genreStringtoDouble("rap");
+            double popValue = SongRecord.genreStringtoDouble("pop");
+
+            MSS1 mss1 = new MSS1("playlist_genre", "rap", "pop", rapValue, popValue,
+                    aboutHalf, energiczna);
+            System.out.println(mss1.generateSummaryWithMeasures(dataset));
+
+            if (oneThird != null) {
+                MSS1 mss1b = new MSS1("playlist_genre", "rap", "pop", rapValue, popValue,
+                        oneThird, energiczna);
+                System.out.println(mss1b.generateSummaryWithMeasures(dataset));
+            }
+
+            System.out.println();
+
+            MSS2 mss2 = new MSS2("playlist_genre", "rap", "pop", rapValue, popValue,
+                    aboutHalf, energiczna, glosna);
+            System.out.println(mss2.generateSummaryWithMeasures(dataset));
+
+            if (almostAll != null) {
+                MSS2 mss2b = new MSS2("playlist_genre", "rap", "pop", rapValue, popValue,
+                        almostAll, energiczna, glosna);
+                System.out.println(mss2b.generateSummaryWithMeasures(dataset));
+            }
+
+            System.out.println();
+
+            MSS3 mss3 = new MSS3("playlist_genre", "rap", "pop", rapValue, popValue,
+                    aboutHalf, energiczna, glosna);
+            System.out.println(mss3.generateSummaryWithMeasures(dataset));
+
+            System.out.println();
+
+            MSS4 mss4 = new MSS4("playlist_genre", "rap", "pop", rapValue, popValue, energiczna);
+            System.out.println(mss4.generateSummaryWithMeasures(dataset));
+
+            if (szybkie != null) {
+                MSS4 mss4b = new MSS4("playlist_genre", "rap", "pop", rapValue, popValue, szybkie);
+                System.out.println(mss4b.generateSummaryWithMeasures(dataset));
+            }
         }
 
         System.out.println("\n=== DONE ===");
