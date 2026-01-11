@@ -1,114 +1,127 @@
 package org.fuzzy;
 
 import org.fuzzy.quantifiers.Quantifier;
-import org.fuzzy.membershipFunctions.MembershipFunctions;
-import org.fuzzy.summaries.LinguisticSummary;
-import org.fuzzy.summaries.SecondOrderLinguisticSummary;
+import org.fuzzy.summaries.*;
+import org.fuzzy.summarizer.CompoundSummarizer;
 import org.fuzzy.summarizer.Summarizer;
-import org.fuzzy.summarizer.SummarizerFactory;
 
 import java.util.*;
 
 import static org.dataImport.ConfigImporter.loadQuantifiersFromConfig;
 import static org.dataImport.ConfigImporter.loadSummarizersFromConfig;
 import static org.dataImport.CsvSongImporter.importSongs;
-import static org.fuzzy.LinguisticSummaryExample.analyzeSummary;
 
 //TIP To <b>Run</b> code, press <shortcut actionId="Run"/> or
 // click the <icon src="AllIcons.Actions.Execute"/> icon in the gutter.
 public class DevMain {
     public static void main(String[] args) {
         List<Summarizer> summarizers = loadSummarizersFromConfig();
-        summarizers = summarizers.subList(0, 7);
+        summarizers = summarizers.subList(6, 25);
         List<Quantifier> quantifiers = loadQuantifiersFromConfig();
 
         System.out.println("Loaded " + summarizers.size() + " summarizers");
         List<SongRecord> dataset = importSongs(30000);
 
-        System.out.println("=== Linguistic Summaries===");
-        for (Summarizer summarizer: summarizers){
-            for (Quantifier quantifier: quantifiers) {
-            LinguisticSummary summary = new LinguisticSummary(quantifier, "songs", summarizer);
-            System.out.println(summary.generateSummaryWithMeasures(dataset));
-            }
+        for (Summarizer summarizer : summarizers) {
+            summarizer.getFuzzySet().getUniverse().setCardinalNumber(dataset.size());
+            summarizer.connectDataset(dataset);
         }
 
-        Quantifier one_third = quantifiers.stream()
+        for (Quantifier quantifier : quantifiers) {
+            quantifier.connectDataset(dataset);
+            int cardinalNumber =  quantifier.isRelative() ? 1 : dataset.size(); // For relative quantifiers, universe is [0,1], for absolute [0,30000]
+            quantifier.getFuzzySet().getUniverse().setCardinalNumber(cardinalNumber);
+        }
+
+//        // MSS1
+        String predicate1 = "rap";
+        String predicate2 = "pop";
+        Quantifier testQuantifier = quantifiers.stream()
                 .filter(q -> q.getName().equals("JEDNA TRZECIA (1/3)"))
                 .findFirst()
-                .orElseThrow(() -> new RuntimeException("Quantifier 'one third' not found"));
-        System.out.println("\n=== Second Order Summaries ===");
-        for (Summarizer summarizer: summarizers){
-            for (Summarizer qualifier: summarizers) {
-                if (qualifier.equals(summarizer)) continue; // Skip self-qualifying
-                LinguisticSummary secondOrderSummary = new SecondOrderLinguisticSummary(
-                        one_third, "songs", summarizer, qualifier);
-                System.out.println(secondOrderSummary.generateSummaryWithMeasures(dataset));
+                .orElseThrow(() -> new RuntimeException("Quantifier not found"));
+//
+//        for (Summarizer summarizer : summarizers) {
+//            MSS1 mss1 = new MSS1(predicate1, predicate2, testQuantifier, summarizer);
+////            System.out.println(mss1.generateSummaryWithMeasures(dataset));
+//            mss1.printLatexFuzzySummaryResults(dataset);
+//        }
+//        // MSS2
+//        for (Summarizer summarizer1 : summarizers) {
+//            for (Summarizer summarizer2 : summarizers) {
+//                if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
+//                MSS2 mss2 = new MSS2(predicate1, predicate2, testQuantifier, summarizer1, summarizer2);
+////                System.out.println(mss2.generateSummaryWithMeasures(dataset));
+//                mss2.printLatexFuzzySummaryResults(dataset);
+//            }
+//
+//        }
+//        // MSS3
+//        for (Summarizer summarizer1 : summarizers) {
+//            for (Summarizer summarizer2 : summarizers) {
+//                if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
+//                MSS3 mss3 = new MSS3(predicate1, predicate2, testQuantifier, summarizer1, summarizer2);
+////                System.out.println(mss3.generateSummaryWithMeasures(dataset));
+//                mss3.printLatexFuzzySummaryResults(dataset);
+//            }
+//        }
+//        // MSS4
+//        for (Summarizer summarizer : summarizers) {
+//                MSS4 mss4 = new MSS4(predicate1, predicate2, summarizer);
+////                System.out.println(mss4.generateSummaryWithMeasures(dataset));
+//                mss4.printLatexFuzzySummaryResults(dataset);
+//        }
+        // Compound Summarizer
+
+        for (Summarizer summarizer1 : summarizers) {
+            for (Summarizer summarizer2 : summarizers) {
+                if (summarizer1.equals(summarizer2)) continue; // Skip self-comparison
+                List<Summarizer> temp = new ArrayList<>();
+                temp.add(summarizer1); temp.add(summarizer2);
+                CompoundSummarizer compoundSummarizer = new CompoundSummarizer(temp);
+                LinguisticSummaryCompound summary = new LinguisticSummaryCompound(
+                        testQuantifier, "utworów", compoundSummarizer);
+//                System.out.println(summary.generateSummaryWithMeasures(dataset));
+                summary.printLatexFuzzySummaryResults(dataset);
             }
+
         }
+        System.exit(0);
 
-    }
-}
+//        System.out.println("=== Linguistic Summaries===");
+//        String header = String.format("Podsumowanie %98s", " ") + "   | T1   | T2     | T3     | T4     | T5     | T6     | T7     | T8     | T9     | T10    | T11    | Optimal";
+//        System.out.println(header);
+//        for (Summarizer summarizer: summarizers){
+//            for (Quantifier quantifier: quantifiers) {
+//            LinguisticSummary summary = new LinguisticSummary(quantifier, "utworów", summarizer);
+////            System.out.println(summary.generateSummaryWithMeasures(dataset));
+//                summary.printLatexFuzzySummaryResults(dataset);
+//            }
+//        }
+//
+//        Quantifier one_third = quantifiers.stream()
+//                .filter(q -> q.getName().equals("OKOŁO POŁOWY"))
+//                .findFirst()
+//                .orElseThrow(() -> new RuntimeException("Quantifier 'more than 1000' not found"));
+//        System.out.println("\n=== Second Order Summaries ===");
+//        System.out.println(header);
+//        for (Summarizer summarizer: summarizers){
+//            for (Summarizer qualifier: summarizers) {
+//                if (qualifier.equals(summarizer)) continue; // Skip self-qualifying
+//                if (qualifier.linguisiticVariable.equals(summarizer.linguisiticVariable)) continue; // Skip same linguistic variable
+//                LinguisticSummary secondOrderSummary = new SecondOrderLinguisticSummary(
+//                        one_third, "utworów", summarizer, qualifier);
+////                System.out.println(secondOrderSummary.generateSummaryWithMeasures(dataset));
+//                secondOrderSummary.printLatexFuzzySummaryResults(dataset);
+//            }
+//        }
 
-class FuzzySetExample {
-    public static void main(String[] args) {
-        // Create universe
-        Universe universe = new Universe(0.0, 10.0, false, 0.5);
-
-        // Create triangular fuzzy set
-        FuzzySet triangular = new FuzzySet(universe,
-                MembershipFunctions.triangular(2.0, 5.0, 8.0));
-
-        // Create classic set
-        FuzzySet classic = FuzzySet.classicSet(universe, 3.0, 7.0);
-
-        // Operations
-        FuzzySet union = triangular.union(classic);
-        FuzzySet intersection = triangular.intersection(classic);
-        FuzzySet complement = triangular.complement();
-
-        // Properties
-        System.out.println("Triangular set height: " + triangular.height());
-        System.out.println("Is normal: " + triangular.isNormal());
-        System.out.println("Is convex: " + triangular.isConvex());
-        System.out.println("Cardinality: " + triangular.cardinality());
-        System.out.println("Centroid: " + triangular.centroid());
     }
 }
 
 class LinguisticSummaryExample {
 
-    public static void main(String[] args) {
-        // Create sample dataset
-        List<SongRecord> dataset = createSampleDataset();
-
-        // Create summarizers
-        Summarizer highEnergy = SummarizerFactory.highEnergy();
-        Summarizer fastTempo = SummarizerFactory.fastTempo();
-        Summarizer popular = SummarizerFactory.popular();
-
-        // Create quantifiers
-        Quantifier most = Quantifier.most();
-        Quantifier few = Quantifier.few();
-        Quantifier aboutFive = Quantifier.about(5);
-
-        // Create linguistic summaries
-        LinguisticSummary summary1 = new LinguisticSummary(most, "songs", highEnergy);
-        LinguisticSummary summary2 = new LinguisticSummary(few, "songs", fastTempo);
-        LinguisticSummary summary3 = new LinguisticSummary(aboutFive, "songs", popular);
-
-        // Test summaries
-        System.out.println("=== Linguistic Summaries with T1 ===");
-        System.out.println(summary1.generateSummaryWithMeasures(dataset));
-        System.out.println(summary2.generateSummaryWithMeasures(dataset));
-        System.out.println(summary3.generateSummaryWithMeasures(dataset));
-
-        // Detailed analysis
-        System.out.println("\n=== Detailed Analysis ===");
-        analyzeSummary(summary1, dataset);
-        analyzeSummary(summary2, dataset);
-        analyzeSummary(summary3, dataset);
-    }
+    public static void main(String[] args) {}
 
     public static void analyzeSummary(LinguisticSummary summary, List<SongRecord> dataset) {
         System.out.println("\nSummary: " + summary.generateSummary());
@@ -124,45 +137,4 @@ class LinguisticSummaryExample {
         }
         System.out.println("  T1 (degree of truth): " + String.format("%.7f", t1));
     }
-
-    // Create sample dataset for testing
-    private static List<SongRecord> createSampleDataset() {
-        List<SongRecord> dataset = new ArrayList<>();
-
-        // Sample songs with various attributes
-        dataset.add(createSong(0.8, 150.0, 75.0)); // High energy, medium tempo, medium popularity
-        dataset.add(createSong(0.3, 80.0, 90.0));  // Low energy, slow tempo, high popularity
-        dataset.add(createSong(0.9, 180.0, 60.0)); // High energy, fast tempo, medium popularity
-        dataset.add(createSong(0.2, 70.0, 95.0));  // Low energy, slow tempo, high popularity
-        dataset.add(createSong(0.7, 140.0, 80.0)); // Medium energy, medium tempo, high popularity
-        dataset.add(createSong(0.85, 170.0, 45.0)); // High energy, fast tempo, low popularity
-        dataset.add(createSong(0.4, 90.0, 70.0));  // Low energy, slow tempo, medium popularity
-        dataset.add(createSong(0.75, 160.0, 85.0)); // High energy, fast tempo, high popularity
-        dataset.add(createSong(0.1, 65.0, 30.0));  // Very low energy, very slow tempo, low popularity
-        dataset.add(createSong(0.95, 190.0, 95.0)); // Very high energy, very fast tempo, very high popularity
-
-        return dataset;
-    }
-
-    private static SongRecord createSong(double energy, double tempo, double popularity) {
-        Map<String, Double> attributes = new HashMap<>();
-        attributes.put("energy", energy);
-        attributes.put("tempo", tempo);
-        attributes.put("popularity", popularity);
-        // TODO: Add other attributes like danceability, valence, etc.
-        return new SongRecord(attributes);
-    }
 }
-
-// TODO: Future enhancements
-/*
- * TODO: Second-order linguistic summaries
- * TODO: Compound summarizers (AND, OR operations)
- * TODO: T2-T11 measures implementation
- * TODO: CSV file loading utility
- * TODO: More sophisticated quantifier definitions
- * TODO: Linguistic variable support
- * TODO: Summary quality ranking
- * TODO: Protoform validation
- * TODO: Natural language generation improvements
- */

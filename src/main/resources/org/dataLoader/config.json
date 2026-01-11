@@ -13,9 +13,9 @@
       "relative": true,
       "functionType": "triangular",
       "parameters": [
-        0.25,
+        0.24,
         0.5,
-        0.75
+        0.76
       ],
       "universe": [
         0,
@@ -27,7 +27,7 @@
       "relative": true,
       "functionType": "triangular",
       "parameters": [
-        0.8,
+        0.74,
         1.0,
         2
       ],
@@ -62,7 +62,7 @@
       ],
       "universe": [
         0,
-        10000
+        30000
       ]
     },
     {
@@ -71,13 +71,13 @@
       "functionType": "trapezoidal",
       "parameters": [
         1000,
-        1050,
-        10000,
-        10000
+        2000,
+        30000,
+        30500
       ],
       "universe": [
         0,
-        10000
+        30000
       ]
     }
   ],
@@ -306,8 +306,8 @@
           "name": "Unplugged",
           "functionType": "trapezoidal",
           "parameters": [
+            0.8,
             0.9,
-            1.0,
             1.0,
             1.1
           ]
@@ -318,7 +318,7 @@
       "name": "Tempo",
       "fieldName": "tempo",
       "universe": [
-        0,
+        50,
         250
       ],
       "terms": [
@@ -384,7 +384,7 @@
           "name": "Wokalna",
           "functionType": "trapezoidal",
           "parameters": [
-            0.0,
+            -0.2,
             0.0,
             0.2,
             0.4
@@ -506,10 +506,10 @@
       "terms": [
         {
           "name": "Uspokajająca",
-          "functionType": "crisp",
+          "functionType": "rampDown",
           "parameters": [
             0.0,
-            0.3
+            0.35
           ]
         },
         {
@@ -523,9 +523,9 @@
         },
         {
           "name": "Bardzo Energiczna",
-          "functionType": "crisp",
+          "functionType": "rampUp",
           "parameters": [
-            0.7,
+            0.65,
             1.0
           ]
         }

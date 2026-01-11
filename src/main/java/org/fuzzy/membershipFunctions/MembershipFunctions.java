@@ -15,8 +15,6 @@ public class MembershipFunctions {
             if (x <= a || x >= d) return 0.0;
             if (x <= b) return (x - a) / (b - a);
             if (x <= c) return 1.0;
-//            System.out.println("For x = " + x + ", membership is = " + (d - x) / (d - c));
-//            System.out.println("Trapezoidal membership function: a = " + a + ", b = " + b + ", c = " + c + ", d = " + d);
             return (d - x) / (d - c);
         };
     }

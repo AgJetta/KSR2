@@ -13,6 +13,12 @@ public class FuzzySet {
     private final Map<Double, Double> memberships;
     private final MembershipFunction membershipFunction;
     private boolean isClassic = false; // Flag to indicate if this is a classic fuzzy set
+    private List<SongRecord> data = null; // List of song records for this fuzzy set
+    private String fieldName = null; // Field name for the fuzzy set, used for connecting to datasets
+
+    private double mfBeginning = 0.0;
+
+    private double mfEnd = 0.0;
 
     // Constructor for fuzzy set with explicit memberships
     public FuzzySet(Universe universe, MembershipFunction membershipFunction, Map<Double, Double> memberships) {
@@ -25,9 +31,6 @@ public class FuzzySet {
             double x = entry.getKey();
             double membership = entry.getValue();
 
-//            if (!universe.contains(x)) {
-//                throw new IllegalArgumentException("Element " + x + " not in universe");
-//            }
             if (membership < 0.0 || membership > 1.0) {
                 throw new IllegalArgumentException("Membership must be in [0, 1]");
             }
@@ -42,26 +45,48 @@ public class FuzzySet {
         this.memberships = new HashMap<>();
         this.membershipFunction = function;
 
-        if (universe.isDense()) {
-            // For dense universe, we need to sample points
-            double step = universe.getLength() / 1000.0; // Sample 1000 points
-            for (double x = universe.getStart(); x <= universe.getEnd(); x += step) {
-                double membership = this.membershipFunction.apply(x);
-                if (membership > 0.0) { // Only store non-zero memberships
-                    this.memberships.put(x, membership);
-                }
-            }
-        } else {
-            // For discrete universe, evaluate at all points
-            for (double x : universe.getDiscretePoints()) {
-                double membership = this.membershipFunction.apply(x);
+//        if (universe.isDense()) {
+//            // For dense universe, we need to sample points
+//            double step = universe.getCardinalNumber() / 1000.0; // Sample 1000 points
+//            for (double x = universe.getStart(); x <= universe.getEnd(); x += step) {
+//                double membership = this.membershipFunction.apply(x);
+//                if (membership > 0.0) { // Only store non-zero memberships
+//                    this.memberships.put(x, membership);
+//                }
+//            }
+//        } else {
+//            // For discrete universe, evaluate at all points
+//            for (double x : universe.getDiscretePoints()) {
+//                double membership = this.membershipFunction.apply(x);
+//                if (membership > 0.0) {
+//                    this.memberships.put(x, membership);
+//                }
+//            }
+//        }
+    }
+
+    public void connectDataset(List<SongRecord> data, String fieldName) {
+        this.data = data;
+        if (Objects.equals(fieldName, "duration_ms")) {
+            fieldName = "duration_ms"; // Special case for duration_ms field
+        }
+        if (data != null) {
+            for (SongRecord record : data) {
+                double fieldValue = record.getAttribute(fieldName);
+                double membership = this.membershipFunction.apply(fieldValue);
                 if (membership > 0.0) {
-                    this.memberships.put(x, membership);
+                    memberships.put(fieldValue, membership);
                 }
             }
         }
     }
 
+    public MembershipFunction getMembershipFunction() {
+        return membershipFunction;
+    }
+    public void setFieldName(String fieldName) {
+        this.fieldName = fieldName;
+    }
     /** Factory methods for classic sets
      * Creates a classic fuzzy set with full membership in the range [start, end]
      * @param universe of Discourse
@@ -96,15 +121,7 @@ public class FuzzySet {
 
     // Basic operations
     public double getMembership(double x) {
-        double membership = memberships.getOrDefault(x, -1.0);
-        if (membership == -1.0) {
-            membership = membershipFunction.apply(x);
-            if (membership > 0.0) {
-                memberships.put(x, membership);
-            } else {
-                membership = 0.0;
-            }
-        }
+        double membership = memberships.getOrDefault(x, 0.);
         return membership;
     }
 
@@ -160,8 +177,6 @@ public class FuzzySet {
             for (Map.Entry<Double, Double> entry : memberships.entrySet()) {
                 newMemberships.put(entry.getKey(), 1.0 - entry.getValue());
             }
-            // Add points not in original set with membership 1.0
-            // This is simplified - in practice you'd need more sophisticated handling
         } else {
             // For discrete universe, evaluate complement for all points
             for (double x : universe.getDiscretePoints()) {
@@ -194,13 +209,30 @@ public class FuzzySet {
     public FuzzySet intersection(FuzzySet other) {
 
         Map<Double, Double> newMemberships = new HashMap<>();
-        Set<Double> allKeys = new HashSet<>(this.memberships.keySet());
-        allKeys.addAll(other.memberships.keySet());
+        FuzzySet smallerSet = this.memberships.size() < other.memberships.size() ? this : other;
+        FuzzySet largerSet = this.memberships.size() < other.memberships.size() ? other : this;
+//        for (SongRecord record : this.data) {
+//            double thisSetElement = record.getAttribute(this.fieldName);
+//            double otherSetElement = record.getAttribute(other.fieldName);
+//            double thisMembership = this.getMembership(thisSetElement);
+//            double otherMembership = other.getMembership(otherSetElement);
+//            double membership = Math.min(thisMembership, otherMembership);
+//            if (membership > 0.0) {
+//                newMemberships.put(thisSetElement, membership);
+//            }
+//        }
 
-        for (double x : allKeys) {
-            double membership = Math.min(this.getMembership(x), other.getMembership(x));
+        for (SongRecord record : this.data) {
+            double smallerSetElement = record.getAttribute(smallerSet.fieldName);
+            if(smallerSet.getMembership(smallerSetElement) == 0) {
+                continue; // Skip if smaller set has no membership for this element
+            }
+            double largerSetElement = record.getAttribute(largerSet.fieldName);
+            double smallerMembership = smallerSet.getMembership(smallerSetElement);
+            double largerMembership = largerSet.getMembership(largerSetElement);
+            double membership = Math.min(smallerMembership, largerMembership);
             if (membership > 0.0) {
-                newMemberships.put(x, membership);
+                newMemberships.put(smallerSetElement, membership);
             }
         }
 
@@ -214,13 +246,9 @@ public class FuzzySet {
         if (alpha < 0.0 || alpha > 1.0) {
             throw new IllegalArgumentException("Alpha must be in [0, 1]");
         }
-//        return memberships.entrySet().stream()
-//                .filter(entry -> entry.getValue() >= alpha)
-//                .map(Map.Entry::getKey)
-//                .collect(Collectors.toSet());
 
         Set<Double> alphaMemberships = memberships.entrySet().stream()
-                .filter(entry -> entry.getValue() >= alpha)
+                .filter(entry -> entry.getValue() > alpha)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
 
@@ -240,22 +268,23 @@ public class FuzzySet {
     }
 
     // Cardinality (sigma-count)
-    public double cardinality() {
-        if (!isClassic) {
-            return memberships.values().stream().mapToDouble(Double::doubleValue).sum();
-        } else {
-            if (memberships.isEmpty()) {
-               return 0.0; // Classic set cardinality is zero if no memberships
-            }
-
-            double minValueInMemberships = memberships.keySet().stream()
-                    .min(Double::compareTo)
-                    .orElseThrow(() -> new IllegalStateException("No elements in classic set"));
-            double maxValueInMemberships = memberships.keySet().stream()
-                    .max(Double::compareTo)
-                    .orElseThrow(() -> new IllegalStateException("No elements in classic set"));
-            return maxValueInMemberships - minValueInMemberships; // Classic set cardinality
-        }
+    public double cardinalNumber() {
+        return memberships.values().stream().mapToDouble(Double::doubleValue).sum();
+//        if (!isClassic) {
+//            return memberships.values().stream().mapToDouble(Double::doubleValue).sum();
+//        } else {
+//            if (memberships.isEmpty()) {
+//               return 0.0; // Classic set cardinality is zero if no memberships
+//            }
+//
+//            double minValueInMemberships = memberships.keySet().stream()
+//                    .min(Double::compareTo)
+//                    .orElseThrow(() -> new IllegalStateException("No elements in classic set"));
+//            double maxValueInMemberships = memberships.keySet().stream()
+//                    .max(Double::compareTo)
+//                    .orElseThrow(() -> new IllegalStateException("No elements in classic set"));
+//            return maxValueInMemberships - minValueInMemberships; // Classic set cardinality
+//        }
     }
 
     // Centroid defuzzification
@@ -277,19 +306,9 @@ public class FuzzySet {
 
     // Placeholder methods for future T1-T11 measures
     public double degreeOfFuzziness() {
-        double supportCardinality = support().cardinality();
-        double universeCardinality = universe.getEnd() - universe.getStart();
-        return (supportCardinality / universeCardinality);
-    }
-
-    public double specificity() {
-        // TODO: Implement based on specific T-measure requirements
-        return 0.0;
-    }
-
-    public double similarity(FuzzySet other) {
-        // TODO: Implement similarity measure
-        return 0.0;
+        double supportCardinality = support().cardinalNumber();
+        double universeCardinalNumber = universe.getCardinalNumber();
+        return (supportCardinality / universeCardinalNumber);
     }
 
     @Override

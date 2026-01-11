@@ -8,7 +8,7 @@ public class CsvSongImporter {
 
     // Hardcoded headers in exact order as they appear in the CSV file
     private static final List<String> HEADERS = Arrays.asList(
-            "track_id", "track_popularity", "danceability", "energy",
+            "playlist_genre", "track_popularity", "danceability", "energy",
             "loudness", "acousticness", "instrumentalness", "liveness", "valence",
             "tempo", "duration_ms"
     );
@@ -20,7 +20,7 @@ public class CsvSongImporter {
         List<SongRecord> songs = new ArrayList<>();
         try {
             InputStream inputStream = CsvSongImporter.class.getClassLoader()
-                    .getResourceAsStream("org/dataLoader/data.csv");
+                    .getResourceAsStream("org/dataLoader/data_genre.csv");
 
             if (inputStream == null) {
                 throw new IOException("Could not find data.csv in resources/org/dataLoader/");
@@ -42,6 +42,15 @@ public class CsvSongImporter {
                     // Map values to numeric fields maintaining order
                     for (int i = 0; i < HEADERS.size() && i < values.length; i++) {
                         String fieldName = HEADERS.get(i);
+                        if (i == 0) {
+                            // Special case for playlist_genre, convert to double
+                            Double genreValue = SongRecord.genreStringtoDouble(values[i]);
+                            if (genreValue == null) {
+                                System.err.println("Invalid genre value: " + values[i]);
+                                System.exit(1);
+                            }
+                            attributes.put(fieldName, genreValue);
+                        }
                         if (NUMERIC_FIELDS.contains(fieldName)) {
                             try {
                                 double numericValue = Double.parseDouble(values[i]);
