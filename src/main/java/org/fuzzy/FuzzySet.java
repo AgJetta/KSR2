@@ -1,32 +1,24 @@
 package org.fuzzy;
 
+import org.apache.commons.math3.analysis.UnivariateFunction;
+import org.apache.commons.math3.analysis.integration.SimpsonIntegrator;
 import org.fuzzy.membershipFunctions.MembershipFunction;
 import org.fuzzy.membershipFunctions.MembershipFunctions;
 
 import java.util.*;
 import java.util.stream.Collectors;
 
-
-// Main FuzzySet class
 public class FuzzySet {
     private final Universe universe;
-    private final Map<Double, Double> memberships;
     private final MembershipFunction membershipFunction;
-    private boolean isClassic = false; // Flag to indicate if this is a classic fuzzy set
-    private List<SongRecord> data = null; // List of song records for this fuzzy set
-    private String fieldName = null; // Field name for the fuzzy set, used for connecting to datasets
+    private final Map<Double, Double> membershipCache;
+    private boolean isClassic = false;
 
-    private double mfBeginning = 0.0;
-
-    private double mfEnd = 0.0;
-
-    // Constructor for fuzzy set with explicit memberships
     public FuzzySet(Universe universe, MembershipFunction membershipFunction, Map<Double, Double> memberships) {
         this.universe = universe;
         this.membershipFunction = membershipFunction;
-        this.memberships = new HashMap<>();
+        this.membershipCache = new HashMap<>();
 
-        // Validate and store memberships
         for (Map.Entry<Double, Double> entry : memberships.entrySet()) {
             double x = entry.getKey();
             double membership = entry.getValue();
@@ -35,47 +27,40 @@ public class FuzzySet {
                 throw new IllegalArgumentException("Membership must be in [0, 1]");
             }
 
-            this.memberships.put(x, membership);
+            this.membershipCache.put(x, membership);
         }
     }
 
-    // Constructor with membership function
     public FuzzySet(Universe universe, MembershipFunction function) {
         this.universe = universe;
-        this.memberships = new HashMap<>();
         this.membershipFunction = function;
-
-//        if (universe.isDense()) {
-//            // For dense universe, we need to sample points
-//            double step = universe.getCardinalNumber() / 1000.0; // Sample 1000 points
-//            for (double x = universe.getStart(); x <= universe.getEnd(); x += step) {
-//                double membership = this.membershipFunction.apply(x);
-//                if (membership > 0.0) { // Only store non-zero memberships
-//                    this.memberships.put(x, membership);
-//                }
-//            }
-//        } else {
-//            // For discrete universe, evaluate at all points
-//            for (double x : universe.getDiscretePoints()) {
-//                double membership = this.membershipFunction.apply(x);
-//                if (membership > 0.0) {
-//                    this.memberships.put(x, membership);
-//                }
-//            }
-//        }
+        this.membershipCache = new HashMap<>();
     }
 
-    public void connectDataset(List<SongRecord> data, String fieldName) {
-        this.data = data;
-        if (Objects.equals(fieldName, "duration_ms")) {
-            fieldName = "duration_ms"; // Special case for duration_ms field
+    public double getMembership(double x) {
+        if (isClassic && !universe.isDense()) {
+            return membershipCache.getOrDefault(x, 0.0);
         }
-        if (data != null) {
-            for (SongRecord record : data) {
-                double fieldValue = record.getAttribute(fieldName);
-                double membership = this.membershipFunction.apply(fieldValue);
+
+        if (membershipCache.containsKey(x)) {
+            return membershipCache.get(x);
+        }
+
+        if (membershipFunction != null) {
+            double membership = membershipFunction.apply(x);
+            membershipCache.put(x, membership);
+            return membership;
+        }
+
+        return 0.0;
+    }
+
+    public void cacheMembershipsForPoints(Set<Double> points) {
+        for (double x : points) {
+            if (!membershipCache.containsKey(x)) {
+                double membership = membershipFunction.apply(x);
                 if (membership > 0.0) {
-                    memberships.put(fieldValue, membership);
+                    membershipCache.put(x, membership);
                 }
             }
         }
@@ -84,49 +69,9 @@ public class FuzzySet {
     public MembershipFunction getMembershipFunction() {
         return membershipFunction;
     }
-    public void setFieldName(String fieldName) {
-        this.fieldName = fieldName;
-    }
-    /** Factory methods for classic sets
-     * Creates a classic fuzzy set with full membership in the range [start, end]
-     * @param universe of Discourse
-     * @param start Values bigger than or equal to this will have full membership
-     * @param end Values smaller than or equal to this will have full membership
-     * @return FuzzySet with full membership in the specified range and crisp membership function
-     */
-    public static FuzzySet classicSet(Universe universe, double start, double end) {
-        FuzzySet returnSet = new FuzzySet(universe, MembershipFunctions.crisp(start, end));
-        returnSet.setClassic(true); // Mark as classic set
-        return returnSet;
-    }
-
-    /** Factory method for classic fuzzy set with specific elements
-     * Creates a classic fuzzy set with full membership for specified elements
-     * @param universe of Discourse
-     * @param start Values bigger than or equal to this will have full membership
-     * @param end Values smaller than or equal to this will have full membership
-     * @param elements Set of elements with full membership
-     * @return FuzzySet with full membership for specified elements and crisp membership function
-     */
-    public static FuzzySet classicSet(Universe universe, double start, double end, Set<Double> elements) {
-
-        Map<Double, Double> memberships = new HashMap<>();
-        for (double x : elements) {
-            memberships.put(x, 1.0);
-        }
-        FuzzySet returnSet = new FuzzySet(universe, MembershipFunctions.crisp(start, end), memberships);
-        returnSet.setClassic(true); // Mark as classic set
-        return returnSet;
-    }
-
-    // Basic operations
-    public double getMembership(double x) {
-        double membership = memberships.getOrDefault(x, 0.);
-        return membership;
-    }
 
     public Set<Tuple> getTuples() {
-        return memberships.entrySet().stream()
+        return membershipCache.entrySet().stream()
                 .map(entry -> new Tuple(entry.getKey(), entry.getValue()))
                 .collect(Collectors.toSet());
     }
@@ -135,23 +80,22 @@ public class FuzzySet {
         return universe;
     }
 
-    // Set properties
     public boolean isEmpty() {
-        return memberships.isEmpty() || memberships.values().stream().allMatch(m -> m == 0.0);
+        return membershipCache.isEmpty() || membershipCache.values().stream().allMatch(m -> m == 0.0);
     }
 
     public boolean isNormal() {
-        return memberships.values().stream().anyMatch(m -> m == 1.0);
+        return membershipCache.values().stream().anyMatch(m -> m == 1.0);
     }
 
     public double height() {
-        return memberships.values().stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
+        return membershipCache.values().stream().mapToDouble(Double::doubleValue).max().orElse(0.0);
     }
 
     public boolean isConvex() {
-        if (memberships.size() < 3) return true;
+        if (membershipCache.size() < 3) return true;
 
-        List<Double> sortedKeys = memberships.keySet().stream().sorted().toList();
+        List<Double> sortedKeys = membershipCache.keySet().stream().sorted().toList();
 
         for (int i = 1; i < sortedKeys.size() - 1; i++) {
             double x1 = sortedKeys.get(i - 1);
@@ -168,87 +112,73 @@ public class FuzzySet {
         return true;
     }
 
-    // Set operations
     public FuzzySet complement() {
-        Map<Double, Double> newMemberships = new HashMap<>();
-
         if (universe.isDense()) {
-            // For dense universe, complement of stored points
-            for (Map.Entry<Double, Double> entry : memberships.entrySet()) {
-                newMemberships.put(entry.getKey(), 1.0 - entry.getValue());
-            }
+            MembershipFunction complementFunc = x -> 1.0 - membershipFunction.apply(x);
+            return new FuzzySet(universe, complementFunc);
         } else {
-            // For discrete universe, evaluate complement for all points
+            Map<Double, Double> newMemberships = new HashMap<>();
             for (double x : universe.getDiscretePoints()) {
                 newMemberships.put(x, 1.0 - getMembership(x));
             }
+            return new FuzzySet(universe, membershipFunction, newMemberships);
         }
-
-        return new FuzzySet(universe, membershipFunction, newMemberships);
     }
 
     public FuzzySet union(FuzzySet other) {
-        if (!this.universe.equals(other.universe)) {
-            throw new IllegalArgumentException("Sets must have the same universe");
-        }
+        if (universe.isDense()) {
+            MembershipFunction unionFunc = x -> Math.max(
+                    this.membershipFunction.apply(x),
+                    other.membershipFunction.apply(x)
+            );
+            return new FuzzySet(universe, unionFunc);
+        } else {
+            Map<Double, Double> newMemberships = new HashMap<>();
+            Set<Double> allKeys = new HashSet<>(this.membershipCache.keySet());
+            allKeys.addAll(other.membershipCache.keySet());
 
-        Map<Double, Double> newMemberships = new HashMap<>();
-        Set<Double> allKeys = new HashSet<>(this.memberships.keySet());
-        allKeys.addAll(other.memberships.keySet());
-
-        for (double x : allKeys) {
-            double membership = Math.max(this.getMembership(x), other.getMembership(x));
-            if (membership > 0.0) {
-                newMemberships.put(x, membership);
+            for (double x : allKeys) {
+                double membership = Math.max(this.getMembership(x), other.getMembership(x));
+                if (membership > 0.0) {
+                    newMemberships.put(x, membership);
+                }
             }
-        }
 
-        return new FuzzySet(universe, membershipFunction, newMemberships);
+            return new FuzzySet(universe, membershipFunction, newMemberships);
+        }
     }
 
     public FuzzySet intersection(FuzzySet other) {
+        if (universe.isDense()) {
+            MembershipFunction intersectionFunc = x -> Math.min(
+                    this.membershipFunction.apply(x),
+                    other.membershipFunction.apply(x)
+            );
+            return new FuzzySet(universe, intersectionFunc);
+        } else {
+            Map<Double, Double> newMemberships = new HashMap<>();
 
-        Map<Double, Double> newMemberships = new HashMap<>();
-        FuzzySet smallerSet = this.memberships.size() < other.memberships.size() ? this : other;
-        FuzzySet largerSet = this.memberships.size() < other.memberships.size() ? other : this;
-//        for (SongRecord record : this.data) {
-//            double thisSetElement = record.getAttribute(this.fieldName);
-//            double otherSetElement = record.getAttribute(other.fieldName);
-//            double thisMembership = this.getMembership(thisSetElement);
-//            double otherMembership = other.getMembership(otherSetElement);
-//            double membership = Math.min(thisMembership, otherMembership);
-//            if (membership > 0.0) {
-//                newMemberships.put(thisSetElement, membership);
-//            }
-//        }
+            FuzzySet smallerSet = this.membershipCache.size() < other.membershipCache.size() ? this : other;
+            FuzzySet largerSet = this.membershipCache.size() < other.membershipCache.size() ? other : this;
 
-        for (SongRecord record : this.data) {
-            double smallerSetElement = record.getAttribute(smallerSet.fieldName);
-            if(smallerSet.getMembership(smallerSetElement) == 0) {
-                continue; // Skip if smaller set has no membership for this element
+            for (double x : smallerSet.membershipCache.keySet()) {
+                double membership = Math.min(smallerSet.getMembership(x), largerSet.getMembership(x));
+                if (membership > 0.0) {
+                    newMemberships.put(x, membership);
+                }
             }
-            double largerSetElement = record.getAttribute(largerSet.fieldName);
-            double smallerMembership = smallerSet.getMembership(smallerSetElement);
-            double largerMembership = largerSet.getMembership(largerSetElement);
-            double membership = Math.min(smallerMembership, largerMembership);
-            if (membership > 0.0) {
-                newMemberships.put(smallerSetElement, membership);
-            }
+
+            return new FuzzySet(universe, membershipFunction, newMemberships);
         }
-
-        return new FuzzySet(universe, membershipFunction, newMemberships);
     }
 
-    // Additional methods for linguistic summaries
-
-    // Alpha-cut: returns crisp set of elements with membership >= alpha
     public FuzzySet alphaCut(double alpha) {
         if (alpha < 0.0 || alpha > 1.0) {
             throw new IllegalArgumentException("Alpha must be in [0, 1]");
         }
 
-        Set<Double> alphaMemberships = memberships.entrySet().stream()
-                .filter(entry -> entry.getValue() > alpha)
+        Set<Double> alphaMemberships = membershipCache.entrySet().stream()
+                .filter(entry -> entry.getValue() >= alpha)
                 .map(Map.Entry::getKey)
                 .collect(Collectors.toSet());
 
@@ -257,79 +187,202 @@ public class FuzzySet {
         return FuzzySet.classicSet(universe, minVal, maxVal, alphaMemberships);
     }
 
-    // Support: elements with membership > 0
     public FuzzySet support() {
-        return alphaCut(Double.MIN_VALUE);
+        if (universe.isDense()) {
+            double start = universe.getStart();
+            double end = universe.getEnd();
+            int samples = 10000;
+            double step = (end - start) / samples;
+
+            double minSupport = end;
+            double maxSupport = start;
+            boolean foundSupport = false;
+
+            for (double x = start; x <= end; x += step) {
+                if (membershipFunction.apply(x) > 0) {
+                    foundSupport = true;
+                    if (x < minSupport) minSupport = x;
+                    if (x > maxSupport) maxSupport = x;
+                }
+            }
+
+            if (!foundSupport) {
+                return FuzzySet.classicSet(universe, start, end, new HashSet<>());
+            }
+
+            FuzzySet crispSupport = new FuzzySet(universe, MembershipFunctions.crisp(minSupport, maxSupport));
+            crispSupport.setClassic(true);
+            return crispSupport;
+        } else {
+            // FIX: For discrete, sample all discrete points if cache is sparse
+            ensureDiscretePointsSampled();
+
+            Set<Double> supportElements = membershipCache.entrySet().stream()
+                    .filter(entry -> entry.getValue() > 0.0)
+                    .map(Map.Entry::getKey)
+                    .collect(Collectors.toSet());
+
+            return FuzzySet.classicSet(universe, universe.getStart(), universe.getEnd(), supportElements);
+        }
     }
 
-    // Core: elements with membership = 1
     public FuzzySet core() {
         return alphaCut(1.0);
     }
 
-    // Cardinality (sigma-count)
     public double cardinalNumber() {
-        return memberships.values().stream().mapToDouble(Double::doubleValue).sum();
-//        if (!isClassic) {
-//            return memberships.values().stream().mapToDouble(Double::doubleValue).sum();
-//        } else {
-//            if (memberships.isEmpty()) {
-//               return 0.0; // Classic set cardinality is zero if no memberships
-//            }
-//
-//            double minValueInMemberships = memberships.keySet().stream()
-//                    .min(Double::compareTo)
-//                    .orElseThrow(() -> new IllegalStateException("No elements in classic set"));
-//            double maxValueInMemberships = memberships.keySet().stream()
-//                    .max(Double::compareTo)
-//                    .orElseThrow(() -> new IllegalStateException("No elements in classic set"));
-//            return maxValueInMemberships - minValueInMemberships; // Classic set cardinality
-//        }
+        if (universe.isDense()) {
+            return computeClm();
+        } else {
+            // FIX: For discrete, sample all points if cache is sparse
+            ensureDiscretePointsSampled();
+
+            if (isClassic) {
+                return membershipCache.values().stream()
+                        .filter(m -> m == 1.0)
+                        .count();
+            } else {
+                return membershipCache.values().stream()
+                        .mapToDouble(Double::doubleValue)
+                        .sum();
+            }
+        }
     }
 
-    // Centroid defuzzification
+    // FIX: New helper method to ensure discrete points are sampled
+    private void ensureDiscretePointsSampled() {
+        if (universe.isDense()) {
+            return; // Not needed for continuous
+        }
+
+        if (isClassic) {
+            return; // Classic sets: cache IS the complete set, don't sample more
+        }
+
+        // For non-classic discrete sets, check if we need to sample
+        int expectedPoints = (int) universe.getMeasure();
+        if (membershipCache.size() < expectedPoints * 0.1) { // Less than 10% sampled
+            for (double x : universe.getDiscretePoints()) {
+                if (!membershipCache.containsKey(x)) {
+                    double membership = membershipFunction.apply(x);
+                    if (membership > 0.0) {
+                        membershipCache.put(x, membership);
+                    }
+                }
+            }
+        }
+    }
+
+    private double computeClm() {
+        if (!universe.isDense()) {
+            throw new IllegalStateException("clm is only for continuous universes");
+        }
+
+        UnivariateFunction integrand = x -> membershipFunction.apply(x);
+        SimpsonIntegrator integrator = new SimpsonIntegrator(1e-6, 1e-10, 2, 64);
+
+        try {
+            return integrator.integrate(10000, integrand, universe.getStart(), universe.getEnd());
+        } catch (Exception e) {
+            return trapezoidalIntegration(integrand, universe.getStart(), universe.getEnd(), 1000);
+        }
+    }
+
+    private double trapezoidalIntegration(UnivariateFunction f, double a, double b, int n) {
+        double h = (b - a) / n;
+        double sum = 0.5 * (f.value(a) + f.value(b));
+
+        for (int i = 1; i < n; i++) {
+            double x = a + i * h;
+            sum += f.value(x);
+        }
+
+        return sum * h;
+    }
+
+    public double supportMeasure() {
+        if (universe.isDense()) {
+            double start = universe.getStart();
+            double end = universe.getEnd();
+            int samples = 10000;
+            double step = (end - start) / samples;
+
+            double minSupport = end;
+            double maxSupport = start;
+            boolean foundSupport = false;
+
+            for (double x = start; x <= end; x += step) {
+                if (membershipFunction.apply(x) > 0) {
+                    foundSupport = true;
+                    if (x < minSupport) minSupport = x;
+                    if (x > maxSupport) maxSupport = x;
+                }
+            }
+
+            return foundSupport ? (maxSupport - minSupport) : 0.0;
+        } else {
+            // FIX: For discrete, sample all points if cache is sparse
+            ensureDiscretePointsSampled();
+
+            return membershipCache.values().stream()
+                    .filter(m -> m > 0.0)
+                    .count();
+        }
+    }
+
     public double centroid() {
         if (isEmpty()) {
             throw new IllegalStateException("Cannot compute centroid of empty set");
         }
 
-        double numerator = memberships.entrySet().stream()
+        double numerator = membershipCache.entrySet().stream()
                 .mapToDouble(entry -> entry.getKey() * entry.getValue())
                 .sum();
 
-        double denominator = memberships.values().stream()
+        double denominator = membershipCache.values().stream()
                 .mapToDouble(Double::doubleValue)
                 .sum();
 
         return numerator / denominator;
     }
 
-    // Placeholder methods for future T1-T11 measures
     public double degreeOfFuzziness() {
-        double supportCardinality = support().cardinalNumber();
-        double universeCardinalNumber = universe.getCardinalNumber();
-        return (supportCardinality / universeCardinalNumber);
+        double supportMeasureValue = supportMeasure();
+        double universeMeasure = universe.getMeasure();
+        return supportMeasureValue / universeMeasure;
+    }
+
+    public static FuzzySet classicSet(Universe universe, double start, double end) {
+        FuzzySet returnSet = new FuzzySet(universe, MembershipFunctions.crisp(start, end));
+        returnSet.setClassic(true);
+        return returnSet;
+    }
+
+    public static FuzzySet classicSet(Universe universe, double start, double end, Set<Double> elements) {
+        Map<Double, Double> memberships = new HashMap<>();
+        for (double x : elements) {
+            memberships.put(x, 1.0);
+        }
+        FuzzySet returnSet = new FuzzySet(universe, MembershipFunctions.crisp(start, end), memberships);
+        returnSet.setClassic(true);
+        return returnSet;
     }
 
     @Override
     public boolean equals(Object obj) {
         if (this == obj) return true;
         if (!(obj instanceof FuzzySet other)) return false;
-
-        return universe.equals(other.universe) && memberships.equals(other.memberships);
+        return universe.equals(other.universe) && membershipCache.equals(other.membershipCache);
     }
 
     @Override
     public int hashCode() {
-        return Objects.hash(universe, memberships);
+        return Objects.hash(universe, membershipCache);
     }
 
     @Override
     public String toString() {
-        return "FuzzySet{" +
-                "universe=" + universe +
-                ", memberships=" + memberships +
-                '}';
+        return "FuzzySet{universe=" + universe + ", cached=" + membershipCache.size() + "}";
     }
 
     public boolean isClassic() {

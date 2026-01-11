@@ -1,5 +1,6 @@
 package org.dataImport;
 
+import org.fuzzy.LogicalConnective;
 import org.fuzzy.quantifiers.Quantifier;
 import org.json.JSONObject;
 import org.json.JSONArray;
@@ -12,6 +13,7 @@ import org.fuzzy.summarizer.Summarizer;
 import java.io.InputStream;
 import java.nio.charset.StandardCharsets;
 import java.util.ArrayList;
+import java.util.Arrays;
 import java.util.List;
 import java.util.Scanner;
 
@@ -48,7 +50,7 @@ public class ConfigImporter {
                 // Create universe
                 double universeMin = universeArray.getDouble(0);
                 double universeMax = universeArray.getDouble(1);
-                Universe universe = new Universe(universeMin, universeMax, true);
+                Universe universe = new Universe(universeMin, universeMax, isRelative);
 
                 // Create membership function based on type
                 MembershipFunction membershipFunction = createMembershipFunction(functionType, parametersArray);
@@ -71,11 +73,8 @@ public class ConfigImporter {
                 if (quantifierMaxValue > universeMax) {
                     quantifierMaxValue = universeMax;
                 }
-                Quantifier return_quantifier = new Quantifier(quantifierName, fuzzySet, isRelative,
-                        quantifierMinValue, quantifierMaxValue);
-                quantifiers.add(return_quantifier);
-
-//                System.out.println("Created quantifier: " + quantifierName);
+                Quantifier q = new Quantifier(quantifierName, fuzzySet, isRelative);
+                quantifiers.add(q);
             }
 
             return quantifiers;
@@ -119,10 +118,8 @@ public class ConfigImporter {
                     // Create fuzzy set and summarizer
                     FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
                     Summarizer summarizer = new Summarizer(termName, variableDatabaseName, fuzzySet);
-                    summarizer.linguisiticVariable = variableName;
+                    summarizer.setLinguisticVariable(0, variableName);
                     summarizers.add(summarizer);
-
-//                    System.out.println("Created summarizer: " + termName + " for field: " + variableDatabaseName);
                 }
             }
 
@@ -197,6 +194,80 @@ public class ConfigImporter {
         }
     }
 
+    /**
+     * Creates compound summarizers by combining simple ones with logical connectives.
+     *
+     * @param simpleSummarizers List of simple summarizers loaded from config
+     * @param combinations Each int[] specifies indices of summarizers to combine
+     * @param connectives Each LogicalConnective[] specifies connectives between components
+     * @return List of compound summarizers
+     */
+    public static List<Summarizer> createCompoundSummarizers(
+            List<Summarizer> simpleSummarizers,
+            List<int[]> combinations,
+            List<LogicalConnective[]> connectives) {
+
+        if (combinations.size() != connectives.size()) {
+            throw new IllegalArgumentException(
+                    "Number of combinations must match number of connective arrays");
+        }
+
+        List<Summarizer> compounds = new ArrayList<>();
+
+        for (int i = 0; i < combinations.size(); i++) {
+            int[] indices = combinations.get(i);
+            LogicalConnective[] conns = connectives.get(i);
+
+            if (indices.length != conns.length + 1) {
+                throw new IllegalArgumentException(
+                        "Number of connectives must be one less than number of components");
+            }
+
+            // Gather components
+            List<String> fieldNames = new ArrayList<>();
+            List<FuzzySet> fuzzySets = new ArrayList<>();
+            List<String> lingVars = new ArrayList<>();
+
+            for (int idx : indices) {
+                if (idx < 0 || idx >= simpleSummarizers.size()) {
+                    throw new IndexOutOfBoundsException(
+                            "Summarizer index " + idx + " out of bounds");
+                }
+
+                Summarizer s = simpleSummarizers.get(idx);
+
+                // Simple summarizers have single components at index 0
+                fieldNames.add(s.getFieldName(0));
+                fuzzySets.add(s.getFuzzySet(0));
+                lingVars.add(s.getLinguisticVariable(0));
+            }
+
+            // Build name
+            String name = buildCompoundName(simpleSummarizers, indices, conns);
+
+            // Create compound summarizer
+            List<LogicalConnective> connList = Arrays.asList(conns);
+            Summarizer compound = new Summarizer(name, fieldNames, fuzzySets, connList, lingVars);
+            compounds.add(compound);
+        }
+
+        return compounds;
+    }
+
+    private static String buildCompoundName(List<Summarizer> summarizers,
+                                            int[] indices,
+                                            LogicalConnective[] connectives) {
+        StringBuilder sb = new StringBuilder();
+        for (int i = 0; i < indices.length; i++) {
+            sb.append(summarizers.get(indices[i]).getName());
+            if (i < connectives.length) {
+                sb.append(" ").append(connectives[i].name()).append(" ");
+            }
+        }
+        return sb.toString();
+    }
+
+
     public static void main(String[] args) throws Exception {
         // Load and create summarizers
         List<Summarizer> summarizers = loadSummarizersFromConfig();
@@ -204,7 +275,7 @@ public class ConfigImporter {
         System.out.println("\n=== Created Summarizers ===");
         for (Summarizer summarizer : summarizers) {
             System.out.println("Summarizer: " + summarizer.getName() +
-                    " (field: " + summarizer.getFieldName() + ")");
+                    " (field: " + summarizer.getFieldName(1) + ")");
         }
 
         // Original config reading code for reference

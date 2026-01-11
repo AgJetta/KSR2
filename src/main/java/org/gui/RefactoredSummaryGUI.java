@@ -2,14 +2,11 @@ package org.gui;
 
 import org.dataImport.ConfigImporter;
 import org.dataImport.CsvSongImporter;
-import org.fuzzy.FuzzySet;
-import org.fuzzy.SongRecord;
-import org.fuzzy.Universe;
+import org.fuzzy.*;
 import org.fuzzy.membershipFunctions.MembershipFunction;
 import org.fuzzy.membershipFunctions.MembershipFunctions;
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summaries.*;
-import org.fuzzy.summarizer.CompoundSummarizer;
 import org.fuzzy.summarizer.Summarizer;
 
 import javax.swing.*;
@@ -167,10 +164,9 @@ public class RefactoredSummaryGUI extends JFrame {
                 Universe universeObj = new Universe(universe[0], universe[1], true);
 
                 FuzzySet fuzzySet = new FuzzySet(universeObj, mf);
-                Quantifier newQuantifier = new Quantifier(name, fuzzySet, isRelative, universe[0], universe[1]);
+                Quantifier newQuantifier = new Quantifier(name, fuzzySet, isRelative);
 
                 quantifiers.add(newQuantifier);
-                newQuantifier.connectDataset(dataset);
                 updateTableFromQuantifiers(tableModel);
 
             } catch (Exception ex) {
@@ -224,12 +220,10 @@ public class RefactoredSummaryGUI extends JFrame {
 
         // Configure summarizers and quantifiers as in original
         for (Summarizer summarizer : summarizers) {
-            summarizer.getFuzzySet().getUniverse().setCardinalNumber(dataset.size());
-            summarizer.connectDataset(dataset);
+            summarizer.getFuzzySet(0).getUniverse().setCardinalNumber(dataset.size());
         }
 
         for (Quantifier quantifier : quantifiers) {
-            quantifier.connectDataset(dataset);
             int cardinalNumber = quantifier.isRelative() ? 1 : dataset.size();
             quantifier.getFuzzySet().getUniverse().setCardinalNumber(cardinalNumber);
         }
@@ -467,7 +461,7 @@ public class RefactoredSummaryGUI extends JFrame {
                             "utworów",
                             summarizer
                     );
-                    summary.setMeasureWeights(getMeasureWeights());
+                    LinguisticSummary.setMeasureWeights(getMeasureWeights());
 
                     // Calculate all T values
                     double[] tValues = calculateAllTValues(summary);
@@ -498,13 +492,13 @@ public class RefactoredSummaryGUI extends JFrame {
                     if (!quantifier.isRelative()) {
                         continue;
                     }
-                    LinguisticSummary summary = new SecondOrderLinguisticSummary(
+                    LinguisticSummary summary = new LinguisticSummary(
                             quantifier,
                             "utworów",
                             summarizer1,
                             summarizer2
                     );
-                    summary.setMeasureWeights(getMeasureWeights());
+                    LinguisticSummary.setMeasureWeights(getMeasureWeights());
 
                     // Calculate all T values
                     double[] tValues = calculateAllTValues(summary);
@@ -536,15 +530,16 @@ public class RefactoredSummaryGUI extends JFrame {
                     if (!quantifier.isRelative()) {
                         continue;
                     }
-                    List<Summarizer> summarizers = new ArrayList<>();
-                    summarizers.add(summarizer1);
-                    summarizers.add(summarizer2);
-                    CompoundSummarizer compoundSummarizer = new CompoundSummarizer(
-                            summarizers
+                    Summarizer compoundSummarizer = new Summarizer(
+                            summarizer1.getName() + " AND " + summarizer2.getName(),
+                            Arrays.asList(summarizer1.getFieldName(0), summarizer2.getFieldName(0)),
+                            Arrays.asList(summarizer1.getFuzzySet(0), summarizer2.getFuzzySet(0)),
+                            Arrays.asList(LogicalConnective.AND),
+                            Arrays.asList(summarizer1.getLinguisticVariable(0), summarizer2.getLinguisticVariable(0))
                     );
-                    LinguisticSummaryCompound summary = new LinguisticSummaryCompound(
+                    LinguisticSummary summary = new LinguisticSummary(
                             quantifier,
-                            predicate1,
+                            "utworów",
                             compoundSummarizer
                     );
 
@@ -582,8 +577,11 @@ public class RefactoredSummaryGUI extends JFrame {
                     continue;
                 }
                 MSS1 summary = new MSS1(
+                        "playlist_genre",
                         predicate1,
                         predicate2,
+                        SongRecord.genreStringtoDouble(predicate1),
+                        SongRecord.genreStringtoDouble(predicate2),
                         quantifier,
                         summarizer1
                 );
@@ -594,8 +592,11 @@ public class RefactoredSummaryGUI extends JFrame {
 
                 // MSS1 Reversed predicates
                 MSS1 summaryReversed = new MSS1(
+                        "playlist_genre",
                         predicate2,
                         predicate1,
+                        SongRecord.genreStringtoDouble(predicate2),
+                        SongRecord.genreStringtoDouble(predicate1),
                         quantifier,
                         summarizer1
                 );
@@ -618,8 +619,11 @@ public class RefactoredSummaryGUI extends JFrame {
                         continue;
                     }
                     MSS2 summary = new MSS2(
+                            "playlist_genre",
                             predicate1,
                             predicate2,
+                            SongRecord.genreStringtoDouble(predicate1),
+                            SongRecord.genreStringtoDouble(predicate2),
                             quantifier,
                             summarizer1,
                             summarizer2
@@ -631,8 +635,11 @@ public class RefactoredSummaryGUI extends JFrame {
 
                     // MSS2 Reversed predicates
                     MSS2 summaryReversed = new MSS2(
+                            "playlist_genre",
                             predicate2,
                             predicate1,
+                            SongRecord.genreStringtoDouble(predicate2),
+                            SongRecord.genreStringtoDouble(predicate1),
                             quantifier,
                             summarizer1,
                             summarizer2
@@ -643,9 +650,12 @@ public class RefactoredSummaryGUI extends JFrame {
                     filteredCombinations += countsReversed[1];
 
                     // MSS3
-                    MSS2 summary3 = new MSS3(
+                    MSS3 summary3 = new MSS3(
+                            "playlist_genre",
                             predicate1,
                             predicate2,
+                            SongRecord.genreStringtoDouble(predicate1),
+                            SongRecord.genreStringtoDouble(predicate2),
                             quantifier,
                             summarizer1,
                             summarizer2
@@ -656,9 +666,12 @@ public class RefactoredSummaryGUI extends JFrame {
                     filteredCombinations += counts3[1];
 
                     // MSS3 Reversed predicates
-                    MSS2 summary3Reversed = new MSS3(
+                    MSS3 summary3Reversed = new MSS3(
+                            "playlist_genre",
                             predicate2,
                             predicate1,
+                            SongRecord.genreStringtoDouble(predicate2),
+                            SongRecord.genreStringtoDouble(predicate1),
                             quantifier,
                             summarizer1,
                             summarizer2
@@ -675,8 +688,11 @@ public class RefactoredSummaryGUI extends JFrame {
             Summarizer summarizer = summarizers.get(selectedSummarizerIndex);
 
             MSS4 summary = new MSS4(
+                    "playlist_genre",
                     predicate1,
                     predicate2,
+                    SongRecord.genreStringtoDouble(predicate1),
+                    SongRecord.genreStringtoDouble(predicate2),
                     summarizer
             );
 
@@ -686,8 +702,11 @@ public class RefactoredSummaryGUI extends JFrame {
 
             // MSS4 Reversed predicates
             MSS4 summaryReversed = new MSS4(
+                    "playlist_genre",
                     predicate2,
                     predicate1,
+                    SongRecord.genreStringtoDouble(predicate2),
+                    SongRecord.genreStringtoDouble(predicate1),
                     summarizer
             );
 
@@ -744,8 +763,14 @@ public class RefactoredSummaryGUI extends JFrame {
         Object[] row = new Object[13];
         row[0] = result.getSummary();
         double[] tValues = result.getTValues();
+        boolean isMSS = result.getSummary().startsWith("MSS");
+
         for (int i = 0; i < tValues.length; i++) {
-            row[i + 1] = String.format("%.4f", tValues[i]);
+            if (isMSS && Math.abs(tValues[i]) < 0.00001) {
+                row[i + 1] = "";
+            } else {
+                row[i + 1] = String.format("%.4f", tValues[i]);
+            }
         }
         tableModel.addRow(row);
     }
