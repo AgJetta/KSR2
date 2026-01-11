@@ -50,7 +50,7 @@ public class ConfigImporter {
                 // Create universe
                 double universeMin = universeArray.getDouble(0);
                 double universeMax = universeArray.getDouble(1);
-                Universe universe = new Universe(universeMin, universeMax, true);
+                Universe universe = new Universe(universeMin, universeMax, isRelative);
 
                 // Create membership function based on type
                 MembershipFunction membershipFunction = createMembershipFunction(functionType, parametersArray);

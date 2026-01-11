@@ -8,12 +8,14 @@ import java.util.*;
 
 import static org.dataImport.ConfigImporter.*;
 import static org.dataImport.TestDataGenerator.generateTestData;
+import static org.dataImport.CsvSongImporter.importSongs;
 
 public class DevMain {
     public static void main(String[] args) {
         System.out.println("=== LOADING DATA ===\n");
-        
-        List<SongRecord> dataset = generateTestData(30000);
+
+        List<SongRecord> dataset = importSongs(10000);
+
         System.out.println("Generated " + dataset.size() + " test songs");
         
         List<Summarizer> summarizers = loadSummarizersFromConfig();
