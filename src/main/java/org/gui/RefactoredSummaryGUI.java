@@ -763,8 +763,14 @@ public class RefactoredSummaryGUI extends JFrame {
         Object[] row = new Object[13];
         row[0] = result.getSummary();
         double[] tValues = result.getTValues();
+        boolean isMSS = result.getSummary().startsWith("MSS");
+
         for (int i = 0; i < tValues.length; i++) {
-            row[i + 1] = String.format("%.4f", tValues[i]);
+            if (isMSS && Math.abs(tValues[i]) < 0.00001) {
+                row[i + 1] = "";
+            } else {
+                row[i + 1] = String.format("%.4f", tValues[i]);
+            }
         }
         tableModel.addRow(row);
     }
