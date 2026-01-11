@@ -1,6 +1,7 @@
 package org.fuzzy.summaries;
 
 import org.fuzzy.*;
+import org.fuzzy.membershipFunctions.MembershipFunction;
 import org.fuzzy.membershipFunctions.MembershipFunctions;
 import org.fuzzy.quantifiers.Quantifier;
 import org.fuzzy.summarizer.Summarizer;
@@ -28,14 +29,14 @@ public class MSSTest {
     private List<SongRecord> createTestDataset() {
         List<SongRecord> dataset = new ArrayList<>();
 
-        // 5 rap songs (genre=2.0) with higher energy
+        // 5 rap songs (genre=2.0) with higher energy and loudness
         for (int i = 0; i < 5; i++) {
             Map<String, Double> attrs = new HashMap<>();
             attrs.put("playlist_genre", 2.0);
             attrs.put("track_popularity", 50.0 + i * 10);
             attrs.put("danceability", 0.7 + i * 0.05);
             attrs.put("energy", 0.8 + i * 0.03);
-            attrs.put("loudness", -5.0 + i);
+            attrs.put("loudness", 55.0 + i);  // Shifted: 55-59 (loud, originally ~-5 to -1 dB)
             attrs.put("acousticness", 0.2);
             attrs.put("instrumentalness", 0.1);
             attrs.put("liveness", 0.2);
@@ -45,14 +46,14 @@ public class MSSTest {
             dataset.add(new SongRecord(attrs));
         }
 
-        // 5 pop songs (genre=0.0) with lower energy
+        // 5 pop songs (genre=0.0) with lower energy and loudness
         for (int i = 0; i < 5; i++) {
             Map<String, Double> attrs = new HashMap<>();
             attrs.put("playlist_genre", 0.0);
             attrs.put("track_popularity", 60.0 + i * 8);
             attrs.put("danceability", 0.6 + i * 0.04);
             attrs.put("energy", 0.5 + i * 0.08);
-            attrs.put("loudness", -8.0 + i);
+            attrs.put("loudness", 52.0 + i);  // Shifted: 52-56 (quieter, originally ~-8 to -4 dB)
             attrs.put("acousticness", 0.3);
             attrs.put("instrumentalness", 0.05);
             attrs.put("liveness", 0.15);
@@ -73,9 +74,21 @@ public class MSSTest {
     }
 
     private Summarizer createSummarizer(String name, String fieldName) {
-        Universe universe = new Universe(0.0, 1.0, true);
-        FuzzySet fuzzySet = new FuzzySet(universe,
-                MembershipFunctions.triangular(0.6, 0.8, 1.0));
+        Universe universe;
+        MembershipFunction function;
+
+        if (fieldName.equals("loudness")) {
+            // Loudness is shifted from [-60, 0] dB to [0, 60] for convenience
+            universe = new Universe(0.0, 60.0, true);
+            // "Loud" means higher values (e.g., 50-60, originally -10 to 0 dB)
+            function = MembershipFunctions.triangular(50.0, 55.0, 60.0);
+        } else {
+            // Energy, danceability, etc. are normalized [0, 1]
+            universe = new Universe(0.0, 1.0, true);
+            function = MembershipFunctions.triangular(0.6, 0.8, 1.0);
+        }
+
+        FuzzySet fuzzySet = new FuzzySet(universe, function);
         return new Summarizer(name, fieldName, fuzzySet);
     }
 
