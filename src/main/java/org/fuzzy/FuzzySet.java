@@ -214,6 +214,9 @@ public class FuzzySet {
             crispSupport.setClassic(true);
             return crispSupport;
         } else {
+            // FIX: For discrete, sample all discrete points if cache is sparse
+            ensureDiscretePointsSampled();
+
             Set<Double> supportElements = membershipCache.entrySet().stream()
                     .filter(entry -> entry.getValue() > 0.0)
                     .map(Map.Entry::getKey)
@@ -231,6 +234,9 @@ public class FuzzySet {
         if (universe.isDense()) {
             return computeClm();
         } else {
+            // FIX: For discrete, sample all points if cache is sparse
+            ensureDiscretePointsSampled();
+
             if (isClassic) {
                 return membershipCache.values().stream()
                         .filter(m -> m == 1.0)
@@ -239,6 +245,30 @@ public class FuzzySet {
                 return membershipCache.values().stream()
                         .mapToDouble(Double::doubleValue)
                         .sum();
+            }
+        }
+    }
+
+    // FIX: New helper method to ensure discrete points are sampled
+    private void ensureDiscretePointsSampled() {
+        if (universe.isDense()) {
+            return; // Not needed for continuous
+        }
+
+        if (isClassic) {
+            return; // Classic sets: cache IS the complete set, don't sample more
+        }
+
+        // For non-classic discrete sets, check if we need to sample
+        int expectedPoints = (int) universe.getMeasure();
+        if (membershipCache.size() < expectedPoints * 0.1) { // Less than 10% sampled
+            for (double x : universe.getDiscretePoints()) {
+                if (!membershipCache.containsKey(x)) {
+                    double membership = membershipFunction.apply(x);
+                    if (membership > 0.0) {
+                        membershipCache.put(x, membership);
+                    }
+                }
             }
         }
     }
@@ -291,6 +321,9 @@ public class FuzzySet {
 
             return foundSupport ? (maxSupport - minSupport) : 0.0;
         } else {
+            // FIX: For discrete, sample all points if cache is sparse
+            ensureDiscretePointsSampled();
+
             return membershipCache.values().stream()
                     .filter(m -> m > 0.0)
                     .count();

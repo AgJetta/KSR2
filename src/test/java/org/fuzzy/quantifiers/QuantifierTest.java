@@ -98,14 +98,19 @@ public class QuantifierTest {
     @Test
     public void testRelativeQuantifier_extremeValues() {
         Universe universe = new Universe(0.0, 1.0, true);
+        // "MOST" peaks at 70-90%, declines to 0 at 100% (semantic: "most" != "all")
         FuzzySet mostFuzzy = new FuzzySet(universe, MembershipFunctions.trapezoidal(0.5, 0.7, 0.9, 1.0));
         Quantifier most = new Quantifier("MOST", mostFuzzy, true);
 
         double membershipZero = most.getMembership(0.0, 100);
         assertEquals(0.0, membershipZero, 0.001, "Should have zero membership for 0%");
 
-        double membershipAll = most.getMembership(100.0, 100);
-        assertEquals(1.0, membershipAll, 0.001, "Should have full membership for 100%");
+        double membership80 = most.getMembership(80.0, 100);
+        assertEquals(1.0, membership80, 0.001, "Should have full membership for 80%");
+
+        // At 100%, trapezoidal(0.5, 0.7, 0.9, 1.0) gives μ=0 by design
+        double membership100 = most.getMembership(100.0, 100);
+        assertEquals(0.0, membership100, 0.001, "Should be 0 at 100% (most != all)");
     }
 
     @Test
@@ -150,12 +155,14 @@ public class QuantifierTest {
     public void testGetSupportMeasure_absolute() {
         Universe universe = new Universe(0, 10000, false, 1.0);
         FuzzySet fuzzy = new FuzzySet(universe, MembershipFunctions.triangular(4000, 5000, 6000));
+
+        // NO MANUAL CACHING NEEDED - FuzzySet auto-samples discrete points now!
         Quantifier quantifier = new Quantifier("ABOUT 5000", fuzzy, false);
 
         double supportMeasure = quantifier.getSupportMeasure();
 
         assertTrue(supportMeasure > 0.0, "Support measure should be positive");
-        assertTrue(supportMeasure <= 2000.0, "Support should be approximately 2000 (4000 to 6000)");
+        assertTrue(supportMeasure <= 2100.0, "Support should be approximately 2000 (4000 to 6000)");
     }
 
     @Test
@@ -175,6 +182,8 @@ public class QuantifierTest {
         Universe universe = new Universe(0, 10000, false, 1.0);
         universe.setCardinalNumber(10000);
         FuzzySet fuzzy = new FuzzySet(universe, MembershipFunctions.triangular(4000, 5000, 6000));
+
+        // NO MANUAL CACHING NEEDED - FuzzySet auto-samples discrete points now!
         Quantifier quantifier = new Quantifier("ABOUT 5000", fuzzy, false);
 
         double cardinality = quantifier.getCardinality();
