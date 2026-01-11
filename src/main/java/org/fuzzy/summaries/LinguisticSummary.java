@@ -12,14 +12,30 @@ public class LinguisticSummary {
     protected final Quantifier quantifier;
     protected final String predicate;
     protected final Summarizer summarizer;
+    protected final Summarizer qualifier;
     protected static List<Double> measureWeights = Arrays.asList(
             0.2, 0.05, 0.05, 0.2, 0.05, 0.05, 0.1, 0.1, 0.1, 0.1
     );
 
     public LinguisticSummary(Quantifier quantifier, String predicate, Summarizer summarizer) {
+        this(quantifier, predicate, summarizer, null);
+    }
+
+    public LinguisticSummary(Quantifier quantifier, String predicate,
+                             Summarizer summarizer, Summarizer qualifier) {
         this.quantifier = quantifier;
         this.predicate = predicate;
         this.summarizer = summarizer;
+        this.qualifier = qualifier;
+
+        if (qualifier != null && !quantifier.isRelative()) {
+            throw new IllegalArgumentException(
+                    "Second-order summaries only support relative quantifiers");
+        }
+    }
+
+    public boolean isSecondOrder() {
+        return qualifier != null;
     }
 
     public static void setMeasureWeights(List<Double> weights) {
@@ -45,14 +61,35 @@ public class LinguisticSummary {
         return summarizer;
     }
 
+    public Summarizer getQualifier() {
+        return qualifier;
+    }
+
     public double calculateT1(List<SongRecord> dataset) {
         if (dataset.isEmpty()) {
             throw new IllegalArgumentException("Can't calculate a measure for an empty dataset!");
         }
 
-        double r = summarizer.calculateR(dataset);
-        int m = dataset.size();
-        return quantifier.getMembership(r, m);
+        if (qualifier == null) {
+            double r = summarizer.calculateR(dataset);
+            int m = dataset.size();
+            return quantifier.getMembership(r, m);
+        } else {
+            double numerator = 0.0;
+            double denominator = 0.0;
+
+            for (SongRecord record : dataset) {
+                double qMembership = qualifier.getMembership(record);
+                denominator += qMembership;
+
+                double sMembership = summarizer.getMembership(record);
+                double intersection = Math.min(sMembership, qMembership);
+                numerator += intersection;
+            }
+
+            double r = denominator > 0 ? numerator / denominator : 0.0;
+            return quantifier.getMembership(r, 1);
+        }
     }
 
     public double calculateT2(List<SongRecord> dataset) {
@@ -83,32 +120,49 @@ public class LinguisticSummary {
             throw new IllegalArgumentException("Can't calculate a measure for an empty dataset!");
         }
 
-        int n = summarizer.getComponentCount();
+        if (qualifier == null) {
+            int n = summarizer.getComponentCount();
 
-        if (n == 1) {
-            double supportCardinality = summarizer.getFuzzySet(0).support().cardinalNumber();
-            double h = dataset.size();
-            return supportCardinality / h;
-        } else {
-            int t = 0;
-            int h = dataset.size();
+            if (n == 1) {
+                double supportCardinality = summarizer.getFuzzySet(0).support().cardinalNumber();
+                double h = dataset.size();
+                return supportCardinality / h;
+            } else {
+                int t = 0;
+                int h = dataset.size();
 
-            for (SongRecord record : dataset) {
-                boolean allSupported = true;
-                for (int i = 0; i < n; i++) {
-                    double fieldValue = record.getAttribute(summarizer.getFieldName(i));
-                    double membership = summarizer.getFuzzySet(i).getMembership(fieldValue);
-                    if (membership <= 0) {
-                        allSupported = false;
-                        break;
+                for (SongRecord record : dataset) {
+                    boolean allSupported = true;
+                    for (int i = 0; i < n; i++) {
+                        double fieldValue = record.getAttribute(summarizer.getFieldName(i));
+                        double membership = summarizer.getFuzzySet(i).getMembership(fieldValue);
+                        if (membership <= 0) {
+                            allSupported = false;
+                            break;
+                        }
+                    }
+                    if (allSupported) {
+                        t++;
                     }
                 }
-                if (allSupported) {
-                    t++;
+
+                return (double) t / h;
+            }
+        } else {
+            int t = 0;
+            int h = 0;
+
+            for (SongRecord record : dataset) {
+                double qMembership = qualifier.getMembership(record);
+                if (qMembership > 0) {
+                    h++;
+                    if (summarizer.getMembership(record) > 0) {
+                        t++;
+                    }
                 }
             }
 
-            return (double) t / h;
+            return h > 0 ? (double) t / h : 0.0;
         }
     }
 
@@ -181,15 +235,48 @@ public class LinguisticSummary {
     }
 
     public double calculateT9(List<SongRecord> dataset) {
-        return 0.0;
+        if (qualifier == null) {
+            return 0.0;
+        }
+
+        int n = qualifier.getComponentCount();
+        double product = 1.0;
+
+        for (int i = 0; i < n; i++) {
+            double fuzziness = qualifier.getFuzzySet(i).degreeOfFuzziness();
+            product *= fuzziness;
+        }
+
+        double geometricMean = Math.pow(product, 1.0 / n);
+        return 1 - geometricMean;
     }
 
     public double calculateT10(List<SongRecord> dataset) {
-        return 0.0;
+        if (qualifier == null) {
+            return 0.0;
+        }
+
+        int n = qualifier.getComponentCount();
+        double product = 1.0;
+
+        for (int i = 0; i < n; i++) {
+            double cardinality = qualifier.getFuzzySet(i).cardinalNumber();
+            Universe universe = qualifier.getFuzzySet(i).getUniverse();
+            double universeMeasure = universe.getMeasure();
+            product *= (cardinality / universeMeasure);
+        }
+
+        double geometricMean = Math.pow(product, 1.0 / n);
+        return 1 - geometricMean;
     }
 
     public double calculateT11(List<SongRecord> dataset) {
-        return 1.0;
+        if (qualifier == null) {
+            return 1.0;
+        }
+
+        int n = qualifier.getComponentCount();
+        return 2 * Math.pow(0.5, n);
     }
 
     public double calculateOptimal(List<SongRecord> dataset) {
@@ -206,13 +293,29 @@ public class LinguisticSummary {
     }
 
     public String generateSummary() {
-        String summaryType = summarizer.isCompound() ? "COMPOUND" : "SIMPLE";
-        return String.format("%s | %s %s są/mają [%s]",
-                summaryType,
-                quantifier.getName(),
-                predicate,
-                summarizer.generateDescription()
-        );
+        String summaryType;
+        if (isSecondOrder()) {
+            summaryType = summarizer.isCompound() ? "COMPOUND F2" : "F2";
+        } else {
+            summaryType = summarizer.isCompound() ? "COMPOUND" : "SIMPLE";
+        }
+
+        if (qualifier == null) {
+            return String.format("%s | %s %s są/mają [%s]",
+                    summaryType,
+                    quantifier.getName(),
+                    predicate,
+                    summarizer.generateDescription()
+            );
+        } else {
+            return String.format("%s | %s %s które są/mają [%s] są/mają [%s]",
+                    summaryType,
+                    quantifier.getName(),
+                    predicate,
+                    qualifier.generateDescription(),
+                    summarizer.generateDescription()
+            );
+        }
     }
 
     public String generateSummaryWithMeasures(List<SongRecord> dataset) {
