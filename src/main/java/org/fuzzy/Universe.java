@@ -44,6 +44,21 @@ public class Universe {
         return x >= start && x <= end;
     }
 
+    /**
+     * Get the measure of the universe.
+     * For continuous universes, this is the length of the interval.
+     * For discrete universes, this is the count of discrete points.
+     *
+     * @return the measure (length for continuous, count for discrete)
+     */
+    public double getMeasure() {
+        if (isDense) {
+            return end - start;  // Length of continuous interval
+        } else {
+            return (double) cardinalNumber;  // Count of discrete points
+        }
+    }
+
     // Get all discrete points in the universe
     public List<Double> getDiscretePoints() {
         if (isDense) {
@@ -57,5 +72,3 @@ public class Universe {
         return points;
     }
 }
-
-

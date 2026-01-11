@@ -19,12 +19,12 @@ public class Summarizer {
         this.name = name;
         this.fieldName = fieldName;
         this.fuzzySet = fuzzySet;
-        this.fuzzySet.setFieldName(fieldName);
+//        this.fuzzySet.setFieldName(fieldName);
     }
 
     public void connectDataset(List<SongRecord> data) {
         this.data = data;
-        this.getFuzzySet().connectDataset(data, fieldName);
+//        this.getFuzzySet().connectDataset(data, fieldName);
     }
 
     public String getName() {
