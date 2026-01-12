@@ -65,35 +65,47 @@ public class MSSTest {
 
         return dataset;
     }
-
+    // Fixed helper for creating a relative quantifier
     private Quantifier createQuantifier() {
         Universe qUniverse = new Universe(0.0, 1.0, true);
         FuzzySet quantifierSet = new FuzzySet(qUniverse,
                 MembershipFunctions.triangular(0.3, 0.5, 0.7));
-        return new Quantifier("OKOŁO POŁOWY", quantifierSet, true);
+        return new Quantifier("OKOŁO POŁOWY", quantifierSet, true,
+                "triangular", new double[]{0.3, 0.5, 0.7});
     }
 
+    // Fixed helper for creating a Summarizer
     private Summarizer createSummarizer(String name, String fieldName) {
         Universe universe;
         MembershipFunction function;
 
         if (fieldName.equals("loudness")) {
-            // Loudness is shifted from [-60, 0] dB to [0, 60] for convenience
+            // Loudness shifted to [0, 60] for convenience
             universe = new Universe(0.0, 60.0, true);
-            // "Loud" means higher values (e.g., 50-60, originally -10 to 0 dB)
             function = MembershipFunctions.triangular(50.0, 55.0, 60.0);
         } else {
-            // Energy, danceability, etc. are normalized [0, 1]
+            // Other features normalized [0,1]
             universe = new Universe(0.0, 1.0, true);
             function = MembershipFunctions.triangular(0.6, 0.8, 1.0);
         }
 
         FuzzySet fuzzySet = new FuzzySet(universe, function);
-        return new Summarizer(name, fieldName, fuzzySet);
+
+        // Now uses the 5-argument Summarizer constructor
+        return new Summarizer(
+                name,
+                Collections.singletonList(fieldName), // fieldNames
+                Collections.singletonList(fuzzySet),  // fuzzySets
+                Collections.emptyList(),              // no connectives for single-variable
+                Collections.singletonList(fieldName)  // lingVars
+        );
     }
 
     @Test
     public void testMSS1Constructor() {
+        Quantifier aboutHalf = createQuantifier();
+        Summarizer energyHigh = createSummarizer("high_energy", "energy");
+
         MSS1 mss1 = new MSS1("playlist_genre", "rap", "pop", 2.0, 0.0,
                 aboutHalf, energyHigh);
 
@@ -105,10 +117,14 @@ public class MSSTest {
 
     @Test
     public void testMSS1ThrowsOnAbsoluteQuantifier() {
+        // Absolute quantifier (should fail)
         Universe absUniverse = new Universe(0.0, 100.0, false);
         FuzzySet absFuzzy = new FuzzySet(absUniverse,
                 MembershipFunctions.triangular(40, 50, 60));
-        Quantifier absolute = new Quantifier("ABOUT 50", absFuzzy, false);
+        Quantifier absolute = new Quantifier("ABOUT 50", absFuzzy, false,
+                "triangular", new double[]{40, 50, 60});
+
+        Summarizer energyHigh = createSummarizer("high_energy", "energy");
 
         assertThrows(IllegalArgumentException.class, () -> {
             new MSS1("playlist_genre", "rap", "pop", 2.0, 0.0,
