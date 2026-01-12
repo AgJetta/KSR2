@@ -3,15 +3,24 @@ package org.fuzzy.quantifiers;
 import org.fuzzy.FuzzySet;
 import org.fuzzy.Universe;
 
+import java.util.Arrays;
+
 public class Quantifier {
     private final String name;
     private final FuzzySet fuzzySet;
     private final boolean isRelative;
 
-    public Quantifier(String name, FuzzySet fuzzySet, boolean isRelative) {
+    // NEW: store membership function type and parameters for display
+    private final String functionType;
+    private final double[] parameters;
+
+    public Quantifier(String name, FuzzySet fuzzySet, boolean isRelative,
+                      String functionType, double[] parameters) {
         this.name = name;
         this.fuzzySet = fuzzySet;
         this.isRelative = isRelative;
+        this.functionType = functionType;
+        this.parameters = parameters.clone(); // defensive copy
         validateUniverse();
     }
 
@@ -53,6 +62,14 @@ public class Quantifier {
         return isRelative;
     }
 
+    public String getFunctionType() {
+        return functionType;
+    }
+
+    public double[] getParameters() {
+        return parameters.clone(); // return copy to keep immutability
+    }
+
     public double getMembership(double r, int m) {
         if (isRelative) {
             double proportion = m > 0 ? r / m : 0.0;
@@ -73,5 +90,12 @@ public class Quantifier {
     @Override
     public String toString() {
         return name + " (" + (isRelative ? "relative" : "absolute") + ")";
+    }
+
+    public String parametersToString() {
+        return Arrays.stream(parameters)
+                .mapToObj(d -> String.format("%.2f", d))
+                .reduce((a, b) -> a + ", " + b)
+                .orElse("");
     }
 }

@@ -34,55 +34,61 @@ public class ConfigImporter {
         try {
             JSONObject config = loadConfig();
 
-            // Access variables and terms
+            // Access quantifiers array
             JSONArray json_quantifiers = config.getJSONArray("quantifiers");
             for (int i = 0; i < json_quantifiers.length(); i++) {
-                JSONObject quantifier = json_quantifiers.getJSONObject(i);
-                JSONArray universeArray = quantifier.getJSONArray("universe");
+                JSONObject quantifierObj = json_quantifiers.getJSONObject(i);
 
+                // Extract basic properties
+                String quantifierName = quantifierObj.getString("name");
+                String functionType = quantifierObj.getString("functionType");
+                JSONArray parametersArray = quantifierObj.getJSONArray("parameters");
+                boolean isRelative = quantifierObj.getBoolean("relative");
 
-                // Extract term properties
-                String quantifierName = quantifier.getString("name");
-                String functionType = quantifier.getString("functionType");
-                JSONArray parametersArray = quantifier.getJSONArray("parameters");
-                boolean isRelative = quantifier.getBoolean("relative");
+                // Convert JSONArray of parameters to double[]
+                double[] parameters = new double[parametersArray.length()];
+                for (int j = 0; j < parametersArray.length(); j++) {
+                    parameters[j] = parametersArray.getDouble(j);
+                }
 
-                // Create universe
+                // Extract universe
+                JSONArray universeArray = quantifierObj.getJSONArray("universe");
                 double universeMin = universeArray.getDouble(0);
                 double universeMax = universeArray.getDouble(1);
                 Universe universe = new Universe(universeMin, universeMax, isRelative);
 
-                // Create membership function based on type
+                // Create membership function
                 MembershipFunction membershipFunction = createMembershipFunction(functionType, parametersArray);
 
-                // Create fuzzy set and summarizer
+                // Create fuzzy set
                 FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
-                double quantifierMinValue = parametersArray.getDouble(0);
-                double quantifierMaxValue = -1;
-                if (functionType.equals("trapezoidal")) {
-                    quantifierMaxValue = parametersArray.getDouble(3);
-                } else {
-                    quantifierMaxValue = parametersArray.getDouble(2);
-                }
-                if (quantifierMinValue < 0.0 ) {
-                    quantifierMinValue = 0.0;
-                }
-                if (quantifierMaxValue > 1.0 && isRelative) {
-                    quantifierMaxValue = 1.0;
-                }
-                if (quantifierMaxValue > universeMax) {
-                    quantifierMaxValue = universeMax;
-                }
-                Quantifier q = new Quantifier(quantifierName, fuzzySet, isRelative);
+
+                // Optional: clamp values for display (not used for calculation)
+                double quantifierMinValue = parameters[0];
+                double quantifierMaxValue = parameters[parameters.length - 1];
+                if (quantifierMinValue < 0.0) quantifierMinValue = 0.0;
+                if (isRelative && quantifierMaxValue > 1.0) quantifierMaxValue = 1.0;
+                if (quantifierMaxValue > universeMax) quantifierMaxValue = universeMax;
+
+                // Create quantifier with new constructor (includes functionType and parameters)
+                Quantifier q = new Quantifier(
+                        quantifierName,
+                        fuzzySet,
+                        isRelative,
+                        functionType,
+                        parameters
+                );
+
                 quantifiers.add(q);
             }
 
             return quantifiers;
         } catch (Exception e) {
-            System.err.println("Error in loading quantifiers, none loaded: " + e.getMessage());
+            System.err.println("Error loading quantifiers: " + e.getMessage());
             return quantifiers;
         }
     }
+
 
     public static List<Summarizer> loadSummarizersFromConfig() {
         List<Summarizer> summarizers = new ArrayList<>();

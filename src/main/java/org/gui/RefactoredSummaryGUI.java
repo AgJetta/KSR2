@@ -71,23 +71,36 @@ public class RefactoredSummaryGUI extends JFrame {
 
         setVisible(true);
     }
+    private void updateTableFromQuantifiers(DefaultTableModel tableModel) {
+        tableModel.setRowCount(0); // clear existing rows
 
-    private void updateTableFromQuantifiers(DefaultTableModel model) {
-        model.setRowCount(0); // Clear existing rows
         for (Quantifier q : quantifiers) {
-            model.addRow(new Object[] {
+            String universeStr = "[" + q.getFuzzySet().getUniverse().getStart() + ", "
+                    + q.getFuzzySet().getUniverse().getEnd() + "]"
+                    + (q.getFuzzySet().getUniverse().isDense() ? " (dense)" : " (discrete)");
+
+            String parametersStr = Arrays.toString(q.getParameters());
+
+            String functionDescription = q.getFunctionType();
+
+            tableModel.addRow(new Object[]{
                     q.getName(),
-                    q.isRelative() ? "Relative" : "Absolute",  // string instead of boolean
-                    "[" + q.getFuzzySet().getUniverse().getStart() + ", " + q.getFuzzySet().getUniverse().getEnd() + "]"
+                    q.getFunctionType(),
+                    q.isRelative() ? "Proportion" : "Count",
+                    universeStr,
+                    functionDescription,   // now readable
+                    parametersStr
             });
         }
     }
 
 
+
+
     private void openAdvancedSettingsDialog() {
         // Create a modal dialog
         JDialog dialog = new JDialog(this, "Zaawansowane ustawienia", true);
-        dialog.setSize(1200, 1000);
+        dialog.setSize(1800, 1000);
         dialog.setLocationRelativeTo(this);
 
         // Create tabbed pane with quantifiers tab
@@ -108,23 +121,31 @@ public class RefactoredSummaryGUI extends JFrame {
         JComboBox<String> functionTypeBox = new JComboBox<>(new String[]{"triangular", "trapezoidal"});
         JCheckBox relativeBox = new JCheckBox("Relative");
         JTextField paramField = new JTextField(15);
-        JTextField universeField = new JTextField(15);
+//        JTextField universeField = new JTextField(15);
 
         JPanel formPanel = new JPanel(new GridLayout(5, 2));
         formPanel.add(new JLabel("Name:"));
         formPanel.add(nameField);
         formPanel.add(new JLabel("Function Type:"));
         formPanel.add(functionTypeBox);
-        formPanel.add(new JLabel("Universe Range (min,max):"));
-        formPanel.add(universeField);
+//        formPanel.add(new JLabel("Universe Range (min,max):"));
+//        formPanel.add(universeField);
         formPanel.add(new JLabel("Parameters (comma-separated):"));
         formPanel.add(paramField);
         formPanel.add(new JLabel("Relative:"));
         formPanel.add(relativeBox);
 
         DefaultTableModel tableModel = new DefaultTableModel(
-                new Object[]{"Nazwa", "Typ", "Dziedzina"}, 0
+                new Object[]{
+                        "Nazwa",
+                        "Typ",
+                        "Dziedzina",
+                        "Universe",
+                        "Function",
+                        "Parameters"
+                }, 0
         );
+
         JTable table = new JTable(tableModel);
         JScrollPane scrollPane = new JScrollPane(table);
 
@@ -132,47 +153,59 @@ public class RefactoredSummaryGUI extends JFrame {
 
         JButton addButton = new JButton("Dodaj kwantyfikator");
         addButton.addActionListener(e -> {
-            // existing add logic here (same as you have)
             try {
                 String name = nameField.getText().trim();
                 String funcType = (String) functionTypeBox.getSelectedItem();
                 boolean isRelative = relativeBox.isSelected();
+
+                if (name.isEmpty()) {
+                    JOptionPane.showMessageDialog(leftPanel, "Nazwa nie może być pusta");
+                    return;
+                }
 
                 double[] parameters = Arrays.stream(paramField.getText().split(","))
                         .map(String::trim)
                         .mapToDouble(Double::parseDouble)
                         .toArray();
 
-                double[] universe = Arrays.stream(universeField.getText().split(","))
-                        .map(String::trim)
-                        .mapToDouble(Double::parseDouble)
-                        .toArray();
-
-                if ((funcType.equals("triangular") && parameters.length != 3) ||
-                        (funcType.equals("trapezoidal") && parameters.length != 4)) {
+                if ("triangular".equals(funcType) && parameters.length != 3 ||
+                        "trapezoidal".equals(funcType) && parameters.length != 4) {
                     JOptionPane.showMessageDialog(leftPanel, "Nieprawidłowa liczba parametrów dla " + funcType);
                     return;
                 }
 
                 MembershipFunction mf;
-                if (funcType.equals("triangular")) {
+                if ("triangular".equals(funcType)) {
                     mf = MembershipFunctions.triangular(parameters[0], parameters[1], parameters[2]);
                 } else {
                     mf = MembershipFunctions.trapezoidal(parameters[0], parameters[1], parameters[2], parameters[3]);
                 }
 
-                Universe universeObj = new Universe(universe[0], universe[1], true);
+                Universe universe = isRelative
+                        ? new Universe(0.0, 1.0, true)
+                        : new Universe(0.0, 300000, false);
 
-                FuzzySet fuzzySet = new FuzzySet(universeObj, mf);
-                Quantifier newQuantifier = new Quantifier(name, fuzzySet, isRelative);
+                FuzzySet fuzzySet = new FuzzySet(universe, mf);
 
-                quantifiers.add(newQuantifier);
+                Quantifier quantifier = new Quantifier(name, fuzzySet, isRelative, funcType, parameters);
+
+                quantifiers.add(quantifier);
                 updateTableFromQuantifiers(tableModel);
 
+                nameField.setText("");
+                paramField.setText("");
+                relativeBox.setSelected(false);
+
+            } catch (NumberFormatException ex) {
+                JOptionPane.showMessageDialog(leftPanel,
+                        "Nieprawidłowy format parametrów (użyj liczb zmiennoprzecinkowych)");
             } catch (Exception ex) {
-                JOptionPane.showMessageDialog(leftPanel, "Błąd podczas dodawania: " + ex.getMessage());
+                JOptionPane.showMessageDialog(leftPanel,
+                        "Błąd podczas dodawania: " + ex.getMessage());
             }
         });
+
+
 
         leftPanel.add(formPanel, BorderLayout.NORTH);
         leftPanel.add(scrollPane, BorderLayout.CENTER);
@@ -185,32 +218,33 @@ public class RefactoredSummaryGUI extends JFrame {
 
                 "" +
                         "EXAMPLE CONFIGURATIONS:" +
+
                         "\n{" +
                         "  \"name\": \"JEDNA TRZECIA (1/3)\",\n" +
                         "  \"relative\": true,\n" +
                         "  \"functionType\": \"triangular\",\n" +
                         "  \"parameters\": [0.0, 0.3333333, 0.6666667],\n" +
-                        "  \"universe\": [0, 1]\n" +
+//                        "  \"universe\": [0, 1]\n" +
                         "},\n" +
+
                         "{\n" +
                         "  \"name\": \"MNIEJ NIŻ 100\",\n" +
                         "  \"relative\": false,\n" +
                         "  \"functionType\": \"trapezoidal\",\n" +
                         "  \"parameters\": [0, 0, 95, 100],\n" +
-                        "  \"universe\": [0, 30000]\n" +
+//                        "  \"universe\": [0, 30000]\n" +
                         "}"
         );
         JScrollPane exampleScrollPane = new JScrollPane(exampleTextArea);
 
         // Use JSplitPane to split left and right panels nicely
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, exampleScrollPane);
-        splitPane.setDividerLocation(800);  // Adjust width of left panel
+        splitPane.setDividerLocation(1400);  // Adjust width of left panel
 
         mainPanel.add(splitPane, BorderLayout.CENTER);
 
         return mainPanel;
     }
-
 
 
     private void loadData() {
