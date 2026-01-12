@@ -19,10 +19,14 @@ import java.io.*;
 import java.util.ArrayList;
 import java.util.Arrays;
 import java.util.List;
+import java.util.Map;
 import java.util.stream.Collectors;
 
 public class RefactoredSummaryGUI extends JFrame {
     // Data
+    // UI Components - Summarizer Panel
+    private JTable summarizerTable;
+    private DefaultTableModel summarizerTableModel;
     private List<Quantifier> quantifiers;
     private List<Summarizer> summarizers;
     private List<SongRecord> dataset;
@@ -71,30 +75,194 @@ public class RefactoredSummaryGUI extends JFrame {
 
         setVisible(true);
     }
-    private void updateTableFromQuantifiers(DefaultTableModel tableModel) {
-        tableModel.setRowCount(0); // clear existing rows
+
+    private void updateTableFromQuantifiers(DefaultTableModel model) {
+        model.setRowCount(0);
 
         for (Quantifier q : quantifiers) {
-            String universeStr = "[" + q.getFuzzySet().getUniverse().getStart() + ", "
-                    + q.getFuzzySet().getUniverse().getEnd() + "]"
-                    + (q.getFuzzySet().getUniverse().isDense() ? " (dense)" : " (discrete)");
+            Universe u = q.getFuzzySet().getUniverse();
 
-            String parametersStr = Arrays.toString(q.getParameters());
-
-            String functionDescription = q.getFunctionType();
-
-            tableModel.addRow(new Object[]{
+            model.addRow(new Object[]{
                     q.getName(),
+                    q.isRelative() ? "Relative" : "Absolute",
+                    "[" + u.getStart() + ", " + u.getEnd() + "]",
                     q.getFunctionType(),
-                    q.isRelative() ? "Proportion" : "Count",
-                    universeStr,
-                    functionDescription,   // now readable
-                    parametersStr
+                    Arrays.toString(q.getParameters())
             });
         }
     }
 
 
+    private JPanel createSummarizerPanel(JDialog parentDialog) {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+        JPanel leftPanel = new JPanel(new BorderLayout());
+
+        // ===== Fields & universes (FIXED) =====
+        Map<String, double[]> fieldUniverses = Map.of(
+                "track_popularity", new double[]{0, 100},
+                "loudness", new double[]{-60, 0},
+                "duration_ms", new double[]{0, 600000},
+                "tempo", new double[]{0, 250},
+                "energy", new double[]{0, 1},
+                "danceability", new double[]{0, 1}
+        );
+
+        JComboBox<String> fieldBox = new JComboBox<>(
+                fieldUniverses.keySet().toArray(new String[0])
+        );
+
+        JTextField universeField = new JTextField(15);
+        universeField.setEditable(false);
+
+        fieldBox.addActionListener(e -> {
+            double[] u = fieldUniverses.get(fieldBox.getSelectedItem());
+            universeField.setText(u[0] + ", " + u[1]);
+            updateSummarizerTableForField((String) fieldBox.getSelectedItem());
+        });
+
+        fieldBox.setSelectedIndex(0);
+
+        JTextField nameField = new JTextField(15);
+        JComboBox<String> functionTypeBox = new JComboBox<>(
+                new String[]{"triangular", "trapezoidal", "gaussian"}
+        );
+        JTextField paramField = new JTextField(15);
+
+        JPanel formPanel = new JPanel(new GridLayout(5, 2));
+        formPanel.add(new JLabel("Field:"));
+        formPanel.add(fieldBox);
+        formPanel.add(new JLabel("Universe:"));
+        formPanel.add(universeField);
+        formPanel.add(new JLabel("Name:"));
+        formPanel.add(nameField);
+        formPanel.add(new JLabel("Function:"));
+        formPanel.add(functionTypeBox);
+        formPanel.add(new JLabel("Parameters:"));
+        formPanel.add(paramField);
+
+        // ===== TABLE =====
+        summarizerTableModel = new DefaultTableModel(
+                new Object[]{"Name", "Field", "Function", "Universe", "Parameters"}, 0
+        );
+        summarizerTable = new JTable(summarizerTableModel);
+        JScrollPane scrollPane = new JScrollPane(summarizerTable);
+
+        // ===== ADD BUTTON =====
+        JButton addButton = new JButton("Add Summarizer");
+        addButton.addActionListener(e -> {
+            try {
+                String field = (String) fieldBox.getSelectedItem();
+                String name = nameField.getText().trim();
+                String funcType = (String) functionTypeBox.getSelectedItem();
+
+                if (name.isEmpty()) throw new IllegalArgumentException("Name required");
+
+                double[] params = Arrays.stream(paramField.getText().split(","))
+                        .map(String::trim)
+                        .mapToDouble(Double::parseDouble)
+                        .toArray();
+
+                MembershipFunction mf;
+                switch (funcType) {
+                    case "triangular" -> {
+                        if (params.length != 3) throw new IllegalArgumentException();
+                        mf = MembershipFunctions.triangular(params[0], params[1], params[2]);
+                    }
+                    case "trapezoidal" -> {
+                        if (params.length != 4) throw new IllegalArgumentException();
+                        mf = MembershipFunctions.trapezoidal(params[0], params[1], params[2], params[3]);
+                    }
+                    case "gaussian" -> {
+                        if (params.length != 2) throw new IllegalArgumentException();
+                        mf = MembershipFunctions.gaussian(params[0], params[1]);
+                    }
+                    default -> throw new IllegalArgumentException();
+                }
+
+                double[] u = fieldUniverses.get(field);
+                Universe universe = new Universe(u[0], u[1], true);
+                FuzzySet fs = new FuzzySet(universe, mf);
+
+                Summarizer s = new Summarizer(name, field, fs, funcType, params, universe);
+                summarizers.add(s);
+                updateSummarizerTableForField(field);
+                updateSummarizerSelectionList();
+                nameField.setText("");
+                paramField.setText("");
+
+            } catch (Exception ex) {
+                JOptionPane.showMessageDialog(
+                        leftPanel,
+                        "Invalid parameters or missing data",
+                        "Error",
+                        JOptionPane.ERROR_MESSAGE
+                );
+            }
+        });
+
+        leftPanel.add(formPanel, BorderLayout.NORTH);
+        leftPanel.add(scrollPane, BorderLayout.CENTER);
+        leftPanel.add(addButton, BorderLayout.SOUTH);
+
+        // ===== RIGHT SIDE: EXAMPLES =====
+        JTextArea exampleTextArea = new JTextArea();
+        exampleTextArea.setEditable(false);
+        exampleTextArea.setText(
+                "" +
+                        "EXAMPLE CONFIGURATIONS:\n\n" +
+
+                        "{\n" +
+                        "  \"name\": \"LOW ENERGY\",\n" +
+                        "  \"field\": \"energy\",\n" +
+                        "  \"functionType\": \"triangular\",\n" +
+                        "  \"parameters\": [0.0, 0.2, 0.4],\n" +
+//  "  \"universe\": [0, 1]\n" +
+                        "},\n\n" +
+
+                        "{\n" +
+                        "  \"name\": \"HIGH ENERGY\",\n" +
+                        "  \"field\": \"energy\",\n" +
+                        "  \"functionType\": \"triangular\",\n" +
+                        "  \"parameters\": [0.6, 0.8, 1.0],\n" +
+//  "  \"universe\": [0, 1]\n" +
+                        "},\n\n" +
+
+                        "{\n" +
+                        "  \"name\": \"SHORT DURATION\",\n" +
+                        "  \"field\": \"duration_ms\",\n" +
+                        "  \"functionType\": \"trapezoidal\",\n" +
+                        "  \"parameters\": [0, 0, 120000, 180000],\n" +
+//  "  \"universe\": [0, 600000]\n" +
+                        "},\n\n"
+        );
+
+        JScrollPane exampleScrollPane = new JScrollPane(exampleTextArea);
+
+        // ===== SPLIT PANE =====
+        JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, exampleScrollPane);
+        splitPane.setDividerLocation(1400); // Adjust as needed
+        mainPanel.add(splitPane, BorderLayout.CENTER);
+
+        return mainPanel;
+    }
+
+    private void updateSummarizerTableForField(String field) {
+        if (summarizerTableModel == null) return;
+
+        summarizerTableModel.setRowCount(0);
+
+        for (Summarizer s : summarizers) {
+            if (s.getFieldName(0).equals(field)) {
+                summarizerTableModel.addRow(new Object[]{
+                        s.getName(),
+                        s.getFieldName(0),
+                        s.getFunctionType(),
+                        "[" + s.getUniverse().getStart() + ", " + s.getUniverse().getEnd() + "]",
+                        Arrays.toString(s.getParameters())
+                });
+            }
+        }
+    }
 
 
     private void openAdvancedSettingsDialog() {
@@ -106,6 +274,8 @@ public class RefactoredSummaryGUI extends JFrame {
         // Create tabbed pane with quantifiers tab
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Quantifiers", createQuantifierPanel(dialog));
+        tabbedPane.addTab("Quantifiers", createSummarizerPanel(dialog));
+
 
         dialog.add(tabbedPane);
         dialog.setVisible(true);
@@ -128,8 +298,7 @@ public class RefactoredSummaryGUI extends JFrame {
         formPanel.add(nameField);
         formPanel.add(new JLabel("Function Type:"));
         formPanel.add(functionTypeBox);
-//        formPanel.add(new JLabel("Universe Range (min,max):"));
-//        formPanel.add(universeField);
+
         formPanel.add(new JLabel("Parameters (comma-separated):"));
         formPanel.add(paramField);
         formPanel.add(new JLabel("Relative:"));
@@ -139,7 +308,6 @@ public class RefactoredSummaryGUI extends JFrame {
                 new Object[]{
                         "Nazwa",
                         "Typ",
-                        "Dziedzina",
                         "Universe",
                         "Function",
                         "Parameters"
@@ -206,7 +374,6 @@ public class RefactoredSummaryGUI extends JFrame {
         });
 
 
-
         leftPanel.add(formPanel, BorderLayout.NORTH);
         leftPanel.add(scrollPane, BorderLayout.CENTER);
         leftPanel.add(addButton, BorderLayout.SOUTH);
@@ -219,7 +386,7 @@ public class RefactoredSummaryGUI extends JFrame {
                 "" +
                         "EXAMPLE CONFIGURATIONS:" +
 
-                        "\n{" +
+                        "\n\n{" +
                         "  \"name\": \"JEDNA TRZECIA (1/3)\",\n" +
                         "  \"relative\": true,\n" +
                         "  \"functionType\": \"triangular\",\n" +
@@ -335,17 +502,12 @@ public class RefactoredSummaryGUI extends JFrame {
         JPanel summarizerPanel = new JPanel(new BorderLayout());
         summarizerPanel.setBorder(BorderFactory.createTitledBorder("Select Summarizers for Combination"));
 
-        // Create list model and populate
         summarizerListModel = new DefaultListModel<>();
-        for (Summarizer s : summarizers) {
-            summarizerListModel.addElement(s.getName());
-        }
-
-        // Create list with multi-selection
         summarizerSelectionList = new JList<>(summarizerListModel);
         summarizerSelectionList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
         summarizerSelectionList.setLayoutOrientation(JList.VERTICAL);
         summarizerSelectionList.setVisibleRowCount(6);
+        updateSummarizerSelectionList(); // populate initially
 
         JScrollPane scrollPane = new JScrollPane(summarizerSelectionList);
         scrollPane.setPreferredSize(new Dimension(400, 150));
@@ -369,6 +531,16 @@ public class RefactoredSummaryGUI extends JFrame {
 
         add(summarizerPanel, BorderLayout.WEST);
     }
+
+    private void updateSummarizerSelectionList() {
+        if (summarizerListModel == null) return;
+
+        summarizerListModel.clear();
+        for (Summarizer s : summarizers) {
+            summarizerListModel.addElement(s.getName());
+        }
+    }
+
 
     private void createControlPanel() {
         JPanel controlPanel = new JPanel(new FlowLayout());
@@ -554,22 +726,26 @@ public class RefactoredSummaryGUI extends JFrame {
 
         // Compound Summarizer
         // Generate all second-order summaries
+        // ===== Compound Summarizers =====
         for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
             for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
-                if (i == j) continue; // Skip same summarizer combination
-                Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
-                Summarizer summarizer2 = summarizers.get(selectedSummarizerIndices.get(j));
+                if (i == j) continue;
+
+                Summarizer s1 = summarizers.get(selectedSummarizerIndices.get(i));
+                Summarizer s2 = summarizers.get(selectedSummarizerIndices.get(j));
 
                 for (Quantifier quantifier : quantifiers) {
-                    if (!quantifier.isRelative()) {
-                        continue;
-                    }
+                    if (!quantifier.isRelative()) continue;
+
                     Summarizer compoundSummarizer = new Summarizer(
-                            summarizer1.getName() + " AND " + summarizer2.getName(),
-                            Arrays.asList(summarizer1.getFieldName(0), summarizer2.getFieldName(0)),
-                            Arrays.asList(summarizer1.getFuzzySet(0), summarizer2.getFuzzySet(0)),
-                            Arrays.asList(LogicalConnective.AND),
-                            Arrays.asList(summarizer1.getLinguisticVariable(0), summarizer2.getLinguisticVariable(0))
+                            s1.getName() + " AND " + s2.getName(),
+                            List.of(s1.getFieldName(0), s2.getFieldName(0)),
+                            List.of(s1.getFuzzySet(0), s2.getFuzzySet(0)),
+                            List.of(LogicalConnective.AND),
+                            List.of(
+                                    s1.getLinguisticVariable(0),
+                                    s2.getLinguisticVariable(0)
+                            )
                     );
                     LinguisticSummary summary = new LinguisticSummary(
                             quantifier,
@@ -577,16 +753,16 @@ public class RefactoredSummaryGUI extends JFrame {
                             compoundSummarizer
                     );
 
-                    // Calculate all T values
                     double[] tValues = calculateAllTValues(summary);
                     double t1 = tValues[0];
 
                     totalCombinations++;
 
-                    // Filter out zero/low values
                     if (t1 > 0.001) {
-                        String summaryText = summary.generateSummary();
-                        SummaryResult result = new SummaryResult(summaryText, tValues);
+                        SummaryResult result = new SummaryResult(
+                                summary.generateSummary(),
+                                tValues
+                        );
                         allResults.add(result);
                         addResultToTable(result);
                         filteredCombinations++;

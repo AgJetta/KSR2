@@ -3,41 +3,59 @@ package org.fuzzy.summarizer;
 import org.fuzzy.FuzzySet;
 import org.fuzzy.LogicalConnective;
 import org.fuzzy.SongRecord;
+import org.fuzzy.Universe;
 
 import java.util.ArrayList;
 import java.util.List;
 
 public class Summarizer {
+
+    // ===== Core representation =====
     private final String name;
     private final List<String> fieldNames;
     private final List<FuzzySet> fuzzySets;
     private final List<LogicalConnective> connectives;
     private final List<String> linguisticVariables;
 
-    public Summarizer(String name, String fieldName, FuzzySet fuzzySet) {
+    // ===== Metadata (ONLY for atomic summarizers) =====
+    private final String functionType;     // null for compound
+    private final double[] parameters;     // null for compound
+    private final Universe universe;        // null for compound
+
+
+    public Summarizer(
+            String name,
+            String fieldName,
+            FuzzySet fuzzySet,
+            String functionType,
+            double[] parameters,
+            Universe universe
+    ) {
         this.name = name;
-        this.fieldNames = new ArrayList<>();
-        this.fieldNames.add(fieldName);
-        this.fuzzySets = new ArrayList<>();
-        this.fuzzySets.add(fuzzySet);
+
+        this.fieldNames = List.of(fieldName);
+        this.fuzzySets = List.of(fuzzySet);
         this.connectives = new ArrayList<>();
-        this.linguisticVariables = new ArrayList<>();
-        this.linguisticVariables.add("");
+
+        this.linguisticVariables = List.of(name);
+
+        this.functionType = functionType;
+        this.parameters = parameters.clone();
+        this.universe = universe;
     }
 
-    public Summarizer(String name, List<String> fieldNames, List<FuzzySet> fuzzySets,
-                      List<LogicalConnective> connectives, List<String> linguisticVariables) {
+    public Summarizer(
+            String name,
+            List<String> fieldNames,
+            List<FuzzySet> fuzzySets,
+            List<LogicalConnective> connectives,
+            List<String> linguisticVariables
+    ) {
         if (fieldNames.size() != fuzzySets.size()) {
-            throw new IllegalArgumentException(
-                    "Number of field names must match number of fuzzy sets");
+            throw new IllegalArgumentException("Fields and fuzzy sets count mismatch");
         }
         if (fuzzySets.size() > 1 && connectives.size() != fuzzySets.size() - 1) {
-            throw new IllegalArgumentException(
-                    "Number of connectives must be one less than number of fuzzy sets");
-        }
-        if (linguisticVariables.size() != fuzzySets.size()) {
-            throw new IllegalArgumentException(
-                    "Number of linguistic variables must match number of fuzzy sets");
+            throw new IllegalArgumentException("Invalid number of connectives");
         }
 
         this.name = name;
@@ -45,18 +63,14 @@ public class Summarizer {
         this.fuzzySets = new ArrayList<>(fuzzySets);
         this.connectives = new ArrayList<>(connectives);
         this.linguisticVariables = new ArrayList<>(linguisticVariables);
+
+        this.functionType = null;
+        this.parameters = null;
+        this.universe = null;
     }
 
     public String getName() {
         return name;
-    }
-
-    public boolean isCompound() {
-        return fuzzySets.size() > 1;
-    }
-
-    public int getComponentCount() {
-        return fuzzySets.size();
     }
 
     public String getFieldName(int index) {
@@ -71,38 +85,48 @@ public class Summarizer {
         return linguisticVariables.get(index);
     }
 
+    public boolean isCompound() {
+        return fuzzySets.size() > 1;
+    }
+
+    public int getComponentCount() {
+        return fuzzySets.size();
+    }
+
+    // ===== Metadata getters (safe for GUI) =====
+    public String getFunctionType() {
+        return functionType;
+    }
+
+    public double[] getParameters() {
+        return parameters == null ? null : parameters.clone();
+    }
+
+    public Universe getUniverse() {
+        return universe;
+    }
+
+
     public double getMembership(SongRecord record) {
-        if (fuzzySets.size() == 1) {
-            double fieldValue = record.getAttribute(fieldNames.get(0));
-            return fuzzySets.get(0).getMembership(fieldValue);
-        }
+        double result = fuzzySets.get(0)
+                .getMembership(record.getAttribute(fieldNames.get(0)));
 
-        double result = Double.NaN;
-        for (int i = 0; i < fuzzySets.size(); i++) {
-            double fieldValue = record.getAttribute(fieldNames.get(i));
-            double membership = fuzzySets.get(i).getMembership(fieldValue);
+        for (int i = 1; i < fuzzySets.size(); i++) {
+            double membership = fuzzySets.get(i)
+                    .getMembership(record.getAttribute(fieldNames.get(i)));
 
-            if (i == 0) {
-                result = membership;
-            } else {
-                LogicalConnective connective = connectives.get(i - 1);
-                result = applyConnective(result, membership, connective);
-            }
+            LogicalConnective connective = connectives.get(i - 1);
+            result = applyConnective(result, membership, connective);
         }
         return result;
     }
 
     private double applyConnective(double a, double b, LogicalConnective connective) {
-        switch (connective) {
-            case AND:
-                return Math.min(a, b);
-            case OR:
-                return Math.max(a, b);
-            case NOT:
-                throw new UnsupportedOperationException("NOT connective not supported in this context");
-            default:
-                throw new IllegalArgumentException("Unknown connective: " + connective);
-        }
+        return switch (connective) {
+            case AND -> Math.min(a, b);
+            case OR -> Math.max(a, b);
+            default -> throw new IllegalStateException("Unsupported connective");
+        };
     }
 
     public double calculateR(List<SongRecord> dataset) {
@@ -110,15 +134,14 @@ public class Summarizer {
                 .mapToDouble(this::getMembership)
                 .sum();
     }
-
     public String generateDescription() {
         if (!isCompound()) {
-            return name + " " + linguisticVariables.get(0);
+            return name;
         }
 
         StringBuilder sb = new StringBuilder();
         for (int i = 0; i < fuzzySets.size(); i++) {
-            sb.append(getName()).append(" ").append(linguisticVariables.get(i));
+            sb.append(linguisticVariables.get(i));
             if (i < connectives.size()) {
                 sb.append(" ").append(connectives.get(i).name()).append(" ");
             }
@@ -129,11 +152,5 @@ public class Summarizer {
     @Override
     public String toString() {
         return generateDescription();
-    }
-
-    public void setLinguisticVariable(int index, String linguisticVariable) {
-        if (index >= 0 && index < linguisticVariables.size()) {
-            linguisticVariables.set(index, linguisticVariable);
-        }
     }
 }

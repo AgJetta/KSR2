@@ -89,52 +89,65 @@ public class ConfigImporter {
         }
     }
 
-
     public static List<Summarizer> loadSummarizersFromConfig() {
         List<Summarizer> summarizers = new ArrayList<>();
 
         try {
             JSONObject config = loadConfig();
 
-            // Access variables and terms
             JSONArray variables = config.getJSONArray("variables");
+
             for (int i = 0; i < variables.length(); i++) {
                 JSONObject variable = variables.getJSONObject(i);
-                String variableName = variable.getString("name");
-                String variableDatabaseName = variable.getString("fieldName");
+
+                String variableName = variable.getString("name");          // e.g. "tempo"
+                String fieldName = variable.getString("fieldName");        // e.g. "tempo"
                 JSONArray universeArray = variable.getJSONArray("universe");
+
+                double uMin = universeArray.getDouble(0);
+                double uMax = universeArray.getDouble(1);
+                Universe universe = new Universe(uMin, uMax, true);
 
                 JSONArray terms = variable.getJSONArray("terms");
                 for (int j = 0; j < terms.length(); j++) {
                     JSONObject term = terms.getJSONObject(j);
 
-                    // Extract term properties
-                    String termName = term.getString("name");
+                    String termName = term.getString("name");              // e.g. "fast"
                     String functionType = term.getString("functionType");
-                    JSONArray parametersArray = term.getJSONArray("parameters");
 
-                    // Create universe
-                    double universeMin = universeArray.getDouble(0);
-                    double universeMax = universeArray.getDouble(1);
-                    Universe universe = new Universe(universeMin, universeMax, true);
+                    JSONArray paramArray = term.getJSONArray("parameters");
+                    double[] params = new double[paramArray.length()];
+                    for (int k = 0; k < paramArray.length(); k++) {
+                        params[k] = paramArray.getDouble(k);
+                    }
 
-                    // Create membership function based on type
-                    MembershipFunction membershipFunction = createMembershipFunction(functionType, parametersArray);
+                    // Create membership function
+                    MembershipFunction mf = createMembershipFunction(functionType, paramArray);
 
-                    // Create fuzzy set and summarizer
-                    FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
-                    Summarizer summarizer = new Summarizer(termName, variableDatabaseName, fuzzySet);
-                    summarizer.setLinguisticVariable(0, variableName);
+                    // Create fuzzy set
+                    FuzzySet fuzzySet = new FuzzySet(universe, mf);
+
+                    // ✅ CORRECT constructor
+                    Summarizer summarizer = new Summarizer(
+                            termName,          // summarizer name
+                            fieldName,         // DB field
+                            fuzzySet,
+                            functionType,      // metadata for GUI
+                            params,
+                            universe
+                    );
+
                     summarizers.add(summarizer);
                 }
             }
 
-            return summarizers;
         } catch (Exception e) {
-            System.err.println("Error in loading summarizers, none loaded: " + e.getMessage());
-            return summarizers;
+            e.printStackTrace();
         }
+
+        return summarizers;
     }
+
 
     private static MembershipFunction createMembershipFunction(String functionType, JSONArray parameters) {
         switch (functionType.toLowerCase()) {
