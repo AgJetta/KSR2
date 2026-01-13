@@ -122,32 +122,25 @@ public class LinguisticSummary {
 
         if (qualifier == null) {
             int n = summarizer.getComponentCount();
+            int t = 0;
+            int h = dataset.size();
 
-            if (n == 1) {
-                double supportCardinality = summarizer.getFuzzySet(0).support().cardinalNumber();
-                double h = dataset.size();
-                return supportCardinality / h;
-            } else {
-                int t = 0;
-                int h = dataset.size();
-
-                for (SongRecord record : dataset) {
-                    boolean allSupported = true;
-                    for (int i = 0; i < n; i++) {
-                        double fieldValue = record.getAttribute(summarizer.getFieldName(i));
-                        double membership = summarizer.getFuzzySet(i).getMembership(fieldValue);
-                        if (membership <= 0) {
-                            allSupported = false;
-                            break;
-                        }
-                    }
-                    if (allSupported) {
-                        t++;
+            for (SongRecord record : dataset) {
+                boolean allSupported = true;
+                for (int i = 0; i < n; i++) {
+                    double fieldValue = record.getAttribute(summarizer.getFieldName(i));
+                    double membership = summarizer.getFuzzySet(i).getMembership(fieldValue);
+                    if (membership <= 0) {
+                        allSupported = false;
+                        break;
                     }
                 }
-
-                return (double) t / h;
+                if (allSupported) {
+                    t++;
+                }
             }
+
+            return (double) t / h;
         } else {
             int t = 0;
             int h = 0;
