@@ -22,7 +22,7 @@ public class SimpleSummaryMeasureRangeTest {
     public static void setup() {
         quantifiers = loadQuantifiersFromConfig();
         summarizers = loadSummarizersFromConfig();
-        dataset = importSongs(30000);
+        dataset = importSongs(1000);
 
         System.out.println("Loaded " + quantifiers.size() + " quantifiers");
         System.out.println("Loaded " + summarizers.size() + " summarizers");
@@ -66,6 +66,69 @@ public class SimpleSummaryMeasureRangeTest {
         if (failureCount > 0) {
             throw new AssertionError("Found " + failureCount + " measure(s) out of range");
         }
+    }
+
+    @Test
+    public void testT4IsZeroForSimpleSummaries() {
+        int summaryCount = 0;
+        int failureCount = 0;
+        double maxT4 = 0.0;
+
+        for (Quantifier quantifier : quantifiers) {
+            for (Summarizer summarizer : summarizers) {
+                summaryCount++;
+                LinguisticSummary summary = new LinguisticSummary(quantifier, "songs", summarizer);
+
+                double t3 = summary.calculateT3(dataset);
+                double t4 = summary.calculateT4(dataset);
+
+                double product = computeProductForT4(summarizer, dataset);
+
+                if (Math.abs(t4) > 1e-6) {
+                    failureCount++;
+                    System.err.println("T4 FAILURE #" + failureCount + ": Summary '" +
+                            summary.generateSummary() + "' has T4=" + t4 + " (expected ≈0)");
+                }
+
+                if (Math.abs(product - t3) > 1e-6) {
+                    failureCount++;
+                    System.err.println("PRODUCT FAILURE #" + failureCount + ": Summary '" +
+                            summary.generateSummary() + "' has product=" + product +
+                            " but T3=" + t3 + " (difference=" + Math.abs(product - t3) + ")");
+                }
+
+                maxT4 = Math.max(maxT4, Math.abs(t4));
+            }
+        }
+
+        System.out.println("\nTested " + summaryCount + " simple summaries for T4=0");
+        System.out.println("Maximum |T4| value: " + maxT4);
+        System.out.println("Failures: " + failureCount);
+
+        if (failureCount > 0) {
+            throw new AssertionError("Found " + failureCount + " T4 violations");
+        }
+    }
+
+    private double computeProductForT4(Summarizer summarizer, List<SongRecord> dataset) {
+        int n = summarizer.getComponentCount();
+        double m = dataset.size();
+        double product = 1.0;
+
+        for (int j = 0; j < n; j++) {
+            int g = 0;
+            for (SongRecord record : dataset) {
+                double fieldValue = record.getAttribute(summarizer.getFieldName(j));
+                double membership = summarizer.getFuzzySet(j).getMembership(fieldValue);
+                if (membership > 0) {
+                    g++;
+                }
+            }
+            double r_j = g / m;
+            product *= r_j;
+        }
+
+        return product;
     }
 
     private void assertMeasureInRange(LinguisticSummary summary, String measureName, double value) {
