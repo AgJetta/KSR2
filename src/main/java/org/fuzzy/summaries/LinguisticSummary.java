@@ -293,12 +293,7 @@ public class LinguisticSummary {
     }
 
     public String generateSummary() {
-        String summaryType;
-        if (isSecondOrder()) {
-            summaryType = summarizer.isCompound() ? "COMPOUND F2" : "F2";
-        } else {
-            summaryType = summarizer.isCompound() ? "COMPOUND" : "SIMPLE";
-        }
+        String summaryType = isSecondOrder() ? "F2" : "F1";
 
         if (qualifier == null) {
             return String.format("%s | %s %s są/mają [%s]",
