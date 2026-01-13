@@ -40,7 +40,7 @@ public class MSSTest {
             attrs.put("acousticness", 0.2);
             attrs.put("instrumentalness", 0.1);
             attrs.put("liveness", 0.2);
-            attrs.put("valence", 0.6);
+            attrs.put("positivity", 0.6);
             attrs.put("tempo", 120.0);
             attrs.put("duration_ms", 180000.0);
             dataset.add(new SongRecord(attrs));
@@ -57,7 +57,7 @@ public class MSSTest {
             attrs.put("acousticness", 0.3);
             attrs.put("instrumentalness", 0.05);
             attrs.put("liveness", 0.15);
-            attrs.put("valence", 0.7);
+            attrs.put("positivity", 0.7);
             attrs.put("tempo", 110.0);
             attrs.put("duration_ms", 200000.0);
             dataset.add(new SongRecord(attrs));

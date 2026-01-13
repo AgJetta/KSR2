@@ -37,7 +37,7 @@ public class TestDataGenerator {
             attributes.put("liveness", random.nextDouble());
             
             // Valence (0.0-1.0)
-            attributes.put("valence", random.nextDouble());
+            attributes.put("positivity", random.nextDouble());
             
             // Tempo (50-250 BPM)
             attributes.put("tempo", 50 + random.nextDouble() * 200);

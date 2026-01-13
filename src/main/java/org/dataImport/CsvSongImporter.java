@@ -9,7 +9,7 @@ public class CsvSongImporter {
     // Hardcoded headers in exact order as they appear in the CSV file
     private static final List<String> HEADERS = Arrays.asList(
             "playlist_genre", "track_popularity", "danceability", "energy",
-            "loudness", "acousticness", "instrumentalness", "liveness", "valence",
+            "loudness", "acousticness", "instrumentalness", "liveness", "positivity",
             "tempo", "duration_ms"
     );
 
