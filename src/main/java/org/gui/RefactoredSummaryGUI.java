@@ -705,8 +705,7 @@ public class RefactoredSummaryGUI extends JFrame {
             if (maxComponents >= 2) {
                 List<Summarizer> compoundSummarizers = new ArrayList<>();
                 for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
-                    for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
-                        if (i == j) continue;
+                    for (int j = i + 1; j < selectedSummarizerIndices.size(); j++) {
                         Summarizer s1 = summarizers.get(selectedSummarizerIndices.get(i));
                         Summarizer s2 = summarizers.get(selectedSummarizerIndices.get(j));
 
@@ -727,26 +726,24 @@ public class RefactoredSummaryGUI extends JFrame {
         if (f1Checkbox.isSelected()) {
             for (Summarizer summarizer : summarizersToUse) {
                 for (Quantifier quantifier : quantifiers) {
-                    for (String predicate : selectedPredicates) {
-                        LinguisticSummary summary = new LinguisticSummary(
-                                quantifier,
-                                "utworów",
-                                summarizer
-                        );
-                        LinguisticSummary.setMeasureWeights(getMeasureWeights());
+                    LinguisticSummary summary = new LinguisticSummary(
+                            quantifier,
+                            "utworów",
+                            summarizer
+                    );
+                    LinguisticSummary.setMeasureWeights(getMeasureWeights());
 
-                        double[] tValues = calculateAllTValues(summary);
-                        double t1 = tValues[0];
+                    double[] tValues = calculateAllTValues(summary);
+                    double t1 = tValues[0];
 
-                        totalCombinations++;
+                    totalCombinations++;
 
-                        if (t1 > 0.001) {
-                            String summaryText = summary.generateSummary();
-                            SummaryResult result = new SummaryResult(summaryText, tValues);
-                            allResults.add(result);
-                            addResultToTable(result);
-                            filteredCombinations++;
-                        }
+                    if (t1 > 0.001) {
+                        String summaryText = summary.generateSummary();
+                        SummaryResult result = new SummaryResult(summaryText, tValues);
+                        allResults.add(result);
+                        addResultToTable(result);
+                        filteredCombinations++;
                     }
                 }
             }
