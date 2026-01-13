@@ -2,6 +2,8 @@ package org.fuzzy.membershipFunctions;
 
 public class MembershipFunctions {
 
+    private static final double GAUSSIAN_THRESHOLD = 1e-6;
+
     public static MembershipFunction triangular(double a, double b, double c) {
         return x -> {
             if (x <= a || x >= c) return 0.0;
@@ -20,10 +22,12 @@ public class MembershipFunctions {
     }
 
     public static MembershipFunction gaussian(double center, double sigma) {
-        return x -> Math.exp(-0.5 * Math.pow((x - center) / sigma, 2));
+        return x -> {
+            double value = Math.exp(-0.5 * Math.pow((x - center) / sigma, 2));
+            return value < GAUSSIAN_THRESHOLD ? 0.0 : value;
+        };
     }
 
-    // Classic set membership (crisp)
     public static MembershipFunction crisp(double start, double end) {
         return x -> (x >= start && x <= end) ? 1.0 : 0.0;
     }
@@ -43,6 +47,4 @@ public class MembershipFunctions {
             return (x - start) / (end - start);
         };
     }
-
-
 }

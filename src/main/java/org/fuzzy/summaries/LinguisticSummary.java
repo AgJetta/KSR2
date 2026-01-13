@@ -168,10 +168,17 @@ public class LinguisticSummary {
         double m = dataset.size();
 
         double product = 1.0;
-        for (int i = 0; i < n; i++) {
-            double g = summarizer.getFuzzySet(i).support().cardinalNumber();
-            double r = g / m;
-            product *= r;
+        for (int j = 0; j < n; j++) {
+            int g = 0;
+            for (SongRecord record : dataset) {
+                double fieldValue = record.getAttribute(summarizer.getFieldName(j));
+                double membership = summarizer.getFuzzySet(j).getMembership(fieldValue);
+                if (membership > 0) {
+                    g++;
+                }
+            }
+            double r_j = g / m;
+            product *= r_j;
         }
 
         double t3 = calculateT3(dataset);
