@@ -106,34 +106,41 @@ public class RefactoredSummaryGUI extends JFrame {
         JPanel mainPanel = new JPanel(new BorderLayout());
         JPanel leftPanel = new JPanel(new BorderLayout());
 
-        // ===== Fields & universes (FIXED) =====
-        Map<String, double[]> fieldUniverses = Map.of(
-                "track_popularity", new double[]{0, 100},
-                "loudness", new double[]{-60, 0},
-                "duration_ms", new double[]{0, 600000},
-                "tempo", new double[]{0, 250},
-                "energy", new double[]{0, 1},
-                "danceability", new double[]{0, 1}
-        );
+        // ===== Use all fields from loaded summarizers =====
+        List<String> fields = summarizers.stream()
+                .map(s -> s.getFieldName(0))   // get field name
+                .distinct()                     // remove duplicates
+                .toList();                      // Java 16+; otherwise use collect(Collectors.toList())
 
-        JComboBox<String> fieldBox = new JComboBox<>(
-                fieldUniverses.keySet().toArray(new String[0])
-        );
+        JComboBox<String> fieldBox = new JComboBox<>(fields.toArray(new String[0]));
 
         JTextField universeField = new JTextField(15);
         universeField.setEditable(false);
 
+        // Map fields to their universe ranges
+        Map<String, Universe> fieldUniverses = summarizers.stream()
+                .collect(Collectors.toMap(
+                        s -> s.getFieldName(0),
+                        s -> s.getFuzzySet(0).getUniverse(),
+                        (u1, u2) -> u1  // in case of duplicates, just pick the first
+                ));
+
         fieldBox.addActionListener(e -> {
-            double[] u = fieldUniverses.get(fieldBox.getSelectedItem());
-            universeField.setText(u[0] + ", " + u[1]);
-            updateSummarizerTableForField((String) fieldBox.getSelectedItem());
+            String selectedField = (String) fieldBox.getSelectedItem();
+            if (selectedField != null) {
+                Universe u = fieldUniverses.get(selectedField);
+                if (u != null) {
+                    universeField.setText(u.getStart() + ", " + u.getEnd());
+                }
+                updateSummarizerTableForField(selectedField);
+            }
         });
 
         fieldBox.setSelectedIndex(0);
 
+        // ===== Rest of the form =====
         JTextField nameField = new JTextField(15);
-        JComboBox<String> functionTypeBox = new JComboBox<>(
-                new String[]{"triangular", "trapezoidal", "gaussian"}
+        JComboBox<String> functionTypeBox = new JComboBox<>(new String[]{"triangular", "trapezoidal", "gaussian", "rampUp", "rampDown", "crisp"}
         );
         JTextField paramField = new JTextField(15);
 
@@ -174,22 +181,34 @@ public class RefactoredSummaryGUI extends JFrame {
                 MembershipFunction mf;
                 switch (funcType) {
                     case "triangular" -> {
-                        if (params.length != 3) throw new IllegalArgumentException();
+                        if (params.length != 3) throw new IllegalArgumentException("Triangular requires 3 parameters");
                         mf = MembershipFunctions.triangular(params[0], params[1], params[2]);
                     }
                     case "trapezoidal" -> {
-                        if (params.length != 4) throw new IllegalArgumentException();
+                        if (params.length != 4) throw new IllegalArgumentException("Trapezoidal requires 4 parameters");
                         mf = MembershipFunctions.trapezoidal(params[0], params[1], params[2], params[3]);
                     }
                     case "gaussian" -> {
-                        if (params.length != 2) throw new IllegalArgumentException();
+                        if (params.length != 2) throw new IllegalArgumentException("Gaussian requires 2 parameters");
                         mf = MembershipFunctions.gaussian(params[0], params[1]);
                     }
-                    default -> throw new IllegalArgumentException();
+                    case "rampUp" -> {
+                        if (params.length != 2) throw new IllegalArgumentException("RampUp requires 2 parameters");
+                        mf = MembershipFunctions.rampUp(params[0], params[1]);
+                    }
+                    case "rampDown" -> {
+                        if (params.length != 2) throw new IllegalArgumentException("RampDown requires 2 parameters");
+                        mf = MembershipFunctions.rampDown(params[0], params[1]);
+                    }
+                    case "crisp" -> {
+                        if (params.length != 2) throw new IllegalArgumentException("Crisp requires 2 parameters");
+                        mf = MembershipFunctions.crisp(params[0], params[1]);
+                    }
+                    default -> throw new IllegalArgumentException("Unknown function type: " + funcType);
                 }
 
-                double[] u = fieldUniverses.get(field);
-                Universe universe = new Universe(u[0], u[1], true);
+
+                Universe universe = fieldUniverses.get(field);
                 FuzzySet fs = new FuzzySet(universe, mf);
 
                 Summarizer s = new Summarizer(name, field, fs, funcType, params, universe);
@@ -242,14 +261,22 @@ public class RefactoredSummaryGUI extends JFrame {
                         "  \"functionType\": \"trapezoidal\",\n" +
                         "  \"parameters\": [0, 0, 120000, 180000],\n" +
 //  "  \"universe\": [0, 600000]\n" +
-                        "},\n\n"
-        );
+                        "},\n\n" +
 
+                        "MEMBERSHIP FUNCTIONS EXAMPLES:\n\n" +
+                        "Function     # of Params     Example Params\n" +
+                        "triangular   3               0.0, 0.2, 0.4\n" +
+                        "trapezoidal  4               0.0, 0.2, 0.4, 0.6\n" +
+                        "gaussian     2               0.5, 0.1\n" +
+                        "crisp        2               0.3, 0.7\n" +
+                        "rampUp       2               0.0, 0.5\n" +
+                        "rampDown     2               0.5, 1.0\n"
+
+        );
         JScrollPane exampleScrollPane = new JScrollPane(exampleTextArea);
 
-        // ===== SPLIT PANE =====
         JSplitPane splitPane = new JSplitPane(JSplitPane.HORIZONTAL_SPLIT, leftPanel, exampleScrollPane);
-        splitPane.setDividerLocation(1400); // Adjust as needed
+        splitPane.setDividerLocation(1400);
         mainPanel.add(splitPane, BorderLayout.CENTER);
 
         return mainPanel;
@@ -297,7 +324,7 @@ public class RefactoredSummaryGUI extends JFrame {
         JPanel leftPanel = new JPanel(new BorderLayout());
 
         JTextField nameField = new JTextField(15);
-        JComboBox<String> functionTypeBox = new JComboBox<>(new String[]{"triangular", "trapezoidal"});
+        JComboBox<String> functionTypeBox = new JComboBox<>(new String[]{"triangular", "trapezoidal", "gaussian", "rampUp", "rampDown", "crisp"});
         JCheckBox relativeBox = new JCheckBox("Relative");
         JTextField paramField = new JTextField(15);
 //        JTextField universeField = new JTextField(15);
@@ -352,10 +379,32 @@ public class RefactoredSummaryGUI extends JFrame {
                 }
 
                 MembershipFunction mf;
-                if ("triangular".equals(funcType)) {
-                    mf = MembershipFunctions.triangular(parameters[0], parameters[1], parameters[2]);
-                } else {
-                    mf = MembershipFunctions.trapezoidal(parameters[0], parameters[1], parameters[2], parameters[3]);
+                switch (funcType) {
+                    case "triangular" -> {
+                        if (parameters.length != 3) throw new IllegalArgumentException("Triangular requires 3 params");
+                        mf = MembershipFunctions.triangular(parameters[0], parameters[1], parameters[2]);
+                    }
+                    case "trapezoidal" -> {
+                        if (parameters.length != 4) throw new IllegalArgumentException("Trapezoidal requires 4 params");
+                        mf = MembershipFunctions.trapezoidal(parameters[0], parameters[1], parameters[2], parameters[3]);
+                    }
+                    case "gaussian" -> {
+                        if (parameters.length != 2) throw new IllegalArgumentException("Gaussian requires 2 params");
+                        mf = MembershipFunctions.gaussian(parameters[0], parameters[1]);
+                    }
+                    case "rampUp" -> {
+                        if (parameters.length != 2) throw new IllegalArgumentException("RampUp requires 2 params");
+                        mf = MembershipFunctions.rampUp(parameters[0], parameters[1]);
+                    }
+                    case "rampDown" -> {
+                        if (parameters.length != 2) throw new IllegalArgumentException("RampDown requires 2 params");
+                        mf = MembershipFunctions.rampDown(parameters[0], parameters[1]);
+                    }
+                    case "crisp" -> {
+                        if (parameters.length != 2) throw new IllegalArgumentException("Crisp requires 2 params");
+                        mf = MembershipFunctions.crisp(parameters[0], parameters[1]);
+                    }
+                    default -> throw new IllegalArgumentException("Unknown function type");
                 }
 
                 Universe universe = isRelative
@@ -409,7 +458,19 @@ public class RefactoredSummaryGUI extends JFrame {
                         "  \"functionType\": \"trapezoidal\",\n" +
                         "  \"parameters\": [0, 0, 95, 100],\n" +
 //                        "  \"universe\": [0, 30000]\n" +
-                        "}"
+                        "}\n\n"+
+
+
+                        "MEMBERSHIP FUNCTIONS EXAMPLES:\n\n" +
+                        "Function     # of Params     Example Params\n" +
+                        "triangular   3               0.0, 0.2, 0.4\n" +
+                        "trapezoidal  4               0.0, 0.2, 0.4, 0.6\n" +
+                        "gaussian     2               0.5, 0.1\n" +
+                        "crisp        2               0.3, 0.7\n" +
+                        "rampUp       2               0.0, 0.5\n" +
+                        "rampDown     2               0.5, 1.0\n"
+
+
         );
         JScrollPane exampleScrollPane = new JScrollPane(exampleTextArea);
 
