@@ -151,9 +151,9 @@ public class RefactoredSummaryGUI extends JFrame {
         formPanel.add(universeField);
         formPanel.add(new JLabel("Name:"));
         formPanel.add(nameField);
-        formPanel.add(new JLabel("Function:"));
+        formPanel.add(new JLabel("Function Type:"));
         formPanel.add(functionTypeBox);
-        formPanel.add(new JLabel("Parameters:"));
+        formPanel.add(new JLabel("Parameters (comma-separated):"));
         formPanel.add(paramField);
 
         // ===== TABLE =====
@@ -310,7 +310,7 @@ public class RefactoredSummaryGUI extends JFrame {
         // Create tabbed pane with quantifiers tab
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Quantifiers", createQuantifierPanel(dialog));
-        tabbedPane.addTab("Quantifiers", createSummarizerPanel(dialog));
+        tabbedPane.addTab("Qualifiers/Summarizers", createSummarizerPanel(dialog));
 
 
         dialog.add(tabbedPane);
@@ -342,8 +342,8 @@ public class RefactoredSummaryGUI extends JFrame {
 
         DefaultTableModel tableModel = new DefaultTableModel(
                 new Object[]{
-                        "Nazwa",
-                        "Typ",
+                        "Name",
+                        "Type",
                         "Universe",
                         "Function",
                         "Parameters"
