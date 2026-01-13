@@ -53,7 +53,16 @@ public class RefactoredSummaryGUI extends JFrame {
     private JTextField[] weightFields;
 
     private final static String NO_PREDICATE = "";
-    // Generated results storage
+
+    private JCheckBox f1Checkbox;
+    private JCheckBox f2Checkbox;
+    private JCheckBox mss1Checkbox;
+    private JCheckBox mss2Checkbox;
+    private JCheckBox mss3Checkbox;
+    private JCheckBox mss4Checkbox;
+    private JCheckBox twoSummarizersCheckbox;
+    private JSpinner maxCompoundSpinner;
+
     private List<SummaryResult> allResults = new ArrayList<>();
 
     public RefactoredSummaryGUI() {
@@ -537,12 +546,40 @@ public class RefactoredSummaryGUI extends JFrame {
 
         summarizerListModel.clear();
         for (Summarizer s : summarizers) {
-            summarizerListModel.addElement(s.getName());
+            String fieldName = s.getFieldName(0);
+            String displayName = fieldName + ": " + s.getName();
+            summarizerListModel.addElement(displayName);
         }
     }
 
 
     private void createControlPanel() {
+        JPanel mainPanel = new JPanel(new BorderLayout());
+
+        JPanel checkboxPanel = new JPanel(new FlowLayout(FlowLayout.LEFT));
+        checkboxPanel.setBorder(BorderFactory.createTitledBorder("Summary Types"));
+
+        f1Checkbox = new JCheckBox("F1", true);
+        f2Checkbox = new JCheckBox("F2", true);
+        mss1Checkbox = new JCheckBox("MSS1", true);
+        mss2Checkbox = new JCheckBox("MSS2", true);
+        mss3Checkbox = new JCheckBox("MSS3", true);
+        mss4Checkbox = new JCheckBox("MSS4", true);
+
+        twoSummarizersCheckbox = new JCheckBox("Compound Summarizers", false);
+        maxCompoundSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
+
+        checkboxPanel.add(f1Checkbox);
+        checkboxPanel.add(f2Checkbox);
+        checkboxPanel.add(mss1Checkbox);
+        checkboxPanel.add(mss2Checkbox);
+        checkboxPanel.add(mss3Checkbox);
+        checkboxPanel.add(mss4Checkbox);
+        checkboxPanel.add(Box.createHorizontalStrut(20));
+        checkboxPanel.add(twoSummarizersCheckbox);
+        checkboxPanel.add(new JLabel("Max components:"));
+        checkboxPanel.add(maxCompoundSpinner);
+
         JPanel controlPanel = new JPanel(new FlowLayout());
         controlPanel.setBorder(BorderFactory.createTitledBorder("Actions"));
 
@@ -551,15 +588,12 @@ public class RefactoredSummaryGUI extends JFrame {
         JButton saveBtn = new JButton("Save Results");
         JButton loadBtn = new JButton("Load Results");
 
-        // Status label
         statusLabel = new JLabel("Ready");
         statusLabel.setForeground(Color.BLUE);
-
 
         JButton advancedSettingsBtn = new JButton("Advanced Settings");
         advancedSettingsBtn.addActionListener(e -> openAdvancedSettingsDialog());
         controlPanel.add(advancedSettingsBtn);
-
 
         generateBtn.addActionListener(this::generateAllCombinations);
         clearBtn.addActionListener(this::clearResults);
@@ -573,7 +607,10 @@ public class RefactoredSummaryGUI extends JFrame {
         controlPanel.add(Box.createHorizontalStrut(20));
         controlPanel.add(statusLabel);
 
-        add(controlPanel, BorderLayout.CENTER);
+        mainPanel.add(checkboxPanel, BorderLayout.NORTH);
+        mainPanel.add(controlPanel, BorderLayout.CENTER);
+
+        add(mainPanel, BorderLayout.CENTER);
     }
 
 
@@ -657,115 +694,112 @@ public class RefactoredSummaryGUI extends JFrame {
         int totalCombinations = 0;
         int filteredCombinations = 0;
 
-        // Generate all first-order summaries
-        for (int summarizerIndex : selectedSummarizerIndices) {
-            Summarizer summarizer = summarizers.get(summarizerIndex);
-            for (Quantifier quantifier : quantifiers) {
-                for (String predicate : selectedPredicates) {
-                    LinguisticSummary summary = new LinguisticSummary(
-                            quantifier,
-                            "utworów",
-                            summarizer
-                    );
-                    LinguisticSummary.setMeasureWeights(getMeasureWeights());
-
-                    // Calculate all T values
-                    double[] tValues = calculateAllTValues(summary);
-                    double t1 = tValues[0]; // Optimal is at index 11
-
-                    totalCombinations++;
-
-                    // Filter out zero/low values (you can adjust this threshold)
-                    if (t1 > 0.001) { // Using small threshold instead of exactly 0
-                        String summaryText = summary.generateSummary();
-                        SummaryResult result = new SummaryResult(summaryText, tValues);
-                        allResults.add(result);
-                        addResultToTable(result);
-                        filteredCombinations++;
-                    }
-                }
-            }
-        }
-
-        // Generate all second-order summaries
-        for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
-            for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
-                if (i == j) continue; // Skip same summarizer combination
-                Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
-                Summarizer summarizer2 = summarizers.get(selectedSummarizerIndices.get(j));
-
+        if (f1Checkbox.isSelected()) {
+            for (int summarizerIndex : selectedSummarizerIndices) {
+                Summarizer summarizer = summarizers.get(summarizerIndex);
                 for (Quantifier quantifier : quantifiers) {
-                    if (!quantifier.isRelative()) {
-                        continue;
-                    }
-                    LinguisticSummary summary = new LinguisticSummary(
-                            quantifier,
-                            "utworów",
-                            summarizer1,
-                            summarizer2
-                    );
-                    LinguisticSummary.setMeasureWeights(getMeasureWeights());
-
-                    // Calculate all T values
-                    double[] tValues = calculateAllTValues(summary);
-                    double t1 = tValues[0]; // Optimal is at index 11
-
-                    totalCombinations++;
-
-                    // Filter out zero/low values (you can adjust this threshold)
-                    if (t1 > 0.001) { // Using small threshold instead of exactly 0
-                        String summaryText = summary.generateSummary();
-                        SummaryResult result = new SummaryResult(summaryText, tValues);
-                        allResults.add(result);
-                        addResultToTable(result);
-                        filteredCombinations++;
-                    }
-                }
-            }
-        }
-
-        // Compound Summarizer
-        // Generate all second-order summaries
-        // ===== Compound Summarizers =====
-        for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
-            for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
-                if (i == j) continue;
-
-                Summarizer s1 = summarizers.get(selectedSummarizerIndices.get(i));
-                Summarizer s2 = summarizers.get(selectedSummarizerIndices.get(j));
-
-                for (Quantifier quantifier : quantifiers) {
-                    if (!quantifier.isRelative()) continue;
-
-                    Summarizer compoundSummarizer = new Summarizer(
-                            s1.getName() + " AND " + s2.getName(),
-                            List.of(s1.getFieldName(0), s2.getFieldName(0)),
-                            List.of(s1.getFuzzySet(0), s2.getFuzzySet(0)),
-                            List.of(LogicalConnective.AND),
-                            List.of(
-                                    s1.getLinguisticVariable(0),
-                                    s2.getLinguisticVariable(0)
-                            )
-                    );
-                    LinguisticSummary summary = new LinguisticSummary(
-                            quantifier,
-                            "utworów",
-                            compoundSummarizer
-                    );
-
-                    double[] tValues = calculateAllTValues(summary);
-                    double t1 = tValues[0];
-
-                    totalCombinations++;
-
-                    if (t1 > 0.001) {
-                        SummaryResult result = new SummaryResult(
-                                summary.generateSummary(),
-                                tValues
+                    for (String predicate : selectedPredicates) {
+                        LinguisticSummary summary = new LinguisticSummary(
+                                quantifier,
+                                "utworów",
+                                summarizer
                         );
-                        allResults.add(result);
-                        addResultToTable(result);
-                        filteredCombinations++;
+                        LinguisticSummary.setMeasureWeights(getMeasureWeights());
+
+                        double[] tValues = calculateAllTValues(summary);
+                        double t1 = tValues[0];
+
+                        totalCombinations++;
+
+                        if (t1 > 0.001) {
+                            String summaryText = summary.generateSummary();
+                            SummaryResult result = new SummaryResult(summaryText, tValues);
+                            allResults.add(result);
+                            addResultToTable(result);
+                            filteredCombinations++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (f2Checkbox.isSelected()) {
+            for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
+                for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
+                    if (i == j) continue;
+                    Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
+                    Summarizer summarizer2 = summarizers.get(selectedSummarizerIndices.get(j));
+
+                    for (Quantifier quantifier : quantifiers) {
+                        if (!quantifier.isRelative()) {
+                            continue;
+                        }
+                        LinguisticSummary summary = new LinguisticSummary(
+                                quantifier,
+                                "utworów",
+                                summarizer1,
+                                summarizer2
+                        );
+                        LinguisticSummary.setMeasureWeights(getMeasureWeights());
+
+                        double[] tValues = calculateAllTValues(summary);
+                        double t1 = tValues[0];
+
+                        totalCombinations++;
+
+                        if (t1 > 0.001) {
+                            String summaryText = summary.generateSummary();
+                            SummaryResult result = new SummaryResult(summaryText, tValues);
+                            allResults.add(result);
+                            addResultToTable(result);
+                            filteredCombinations++;
+                        }
+                    }
+                }
+            }
+        }
+
+        if (twoSummarizersCheckbox.isSelected() && (int) maxCompoundSpinner.getValue() >= 2) {
+            for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
+                for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
+                    if (i == j) continue;
+
+                    Summarizer s1 = summarizers.get(selectedSummarizerIndices.get(i));
+                    Summarizer s2 = summarizers.get(selectedSummarizerIndices.get(j));
+
+                    for (Quantifier quantifier : quantifiers) {
+                        if (!quantifier.isRelative()) continue;
+
+                        Summarizer compoundSummarizer = new Summarizer(
+                                s1.getName() + " AND " + s2.getName(),
+                                List.of(s1.getFieldName(0), s2.getFieldName(0)),
+                                List.of(s1.getFuzzySet(0), s2.getFuzzySet(0)),
+                                List.of(LogicalConnective.AND),
+                                List.of(
+                                        s1.getLinguisticVariable(0),
+                                        s2.getLinguisticVariable(0)
+                                )
+                        );
+                        LinguisticSummary summary = new LinguisticSummary(
+                                quantifier,
+                                "utworów",
+                                compoundSummarizer
+                        );
+
+                        double[] tValues = calculateAllTValues(summary);
+                        double t1 = tValues[0];
+
+                        totalCombinations++;
+
+                        if (t1 > 0.001) {
+                            SummaryResult result = new SummaryResult(
+                                    summary.generateSummary(),
+                                    tValues
+                            );
+                            allResults.add(result);
+                            addResultToTable(result);
+                            filteredCombinations++;
+                        }
                     }
                 }
             }
@@ -778,151 +812,155 @@ public class RefactoredSummaryGUI extends JFrame {
             return;
         }
 
-        // MSS1
-        for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
-            Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
-
-            for (Quantifier quantifier : quantifiers) {
-                if (!quantifier.isRelative()) {
-                    continue;
-                }
-                MSS1 summary = new MSS1(
-                        "playlist_genre",
-                        predicate1,
-                        predicate2,
-                        SongRecord.genreStringtoDouble(predicate1),
-                        SongRecord.genreStringtoDouble(predicate2),
-                        quantifier,
-                        summarizer1
-                );
-
-                int[] counts = addMSSResults(summary);
-                totalCombinations += counts[0];
-                filteredCombinations += counts[1];
-
-                // MSS1 Reversed predicates
-                MSS1 summaryReversed = new MSS1(
-                        "playlist_genre",
-                        predicate2,
-                        predicate1,
-                        SongRecord.genreStringtoDouble(predicate2),
-                        SongRecord.genreStringtoDouble(predicate1),
-                        quantifier,
-                        summarizer1
-                );
-
-                int[] countsReversed = addMSSResults(summaryReversed);
-                totalCombinations += countsReversed[0];
-                filteredCombinations += countsReversed[1];
-            }
-        }
-
-        // MSS2, MSS3
-        for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
-            for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
-                if (i == j) continue; // Skip same summarizer combination
+        if (mss1Checkbox.isSelected() && !predicate2.equals(NO_PREDICATE)) {
+            for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
                 Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
-                Summarizer summarizer2 = summarizers.get(selectedSummarizerIndices.get(j));
 
                 for (Quantifier quantifier : quantifiers) {
                     if (!quantifier.isRelative()) {
                         continue;
                     }
-                    MSS2 summary = new MSS2(
+                    MSS1 summary = new MSS1(
                             "playlist_genre",
                             predicate1,
                             predicate2,
                             SongRecord.genreStringtoDouble(predicate1),
                             SongRecord.genreStringtoDouble(predicate2),
                             quantifier,
-                            summarizer1,
-                            summarizer2
+                            summarizer1
                     );
 
                     int[] counts = addMSSResults(summary);
                     totalCombinations += counts[0];
                     filteredCombinations += counts[1];
 
-                    // MSS2 Reversed predicates
-                    MSS2 summaryReversed = new MSS2(
+                    MSS1 summaryReversed = new MSS1(
                             "playlist_genre",
                             predicate2,
                             predicate1,
                             SongRecord.genreStringtoDouble(predicate2),
                             SongRecord.genreStringtoDouble(predicate1),
                             quantifier,
-                            summarizer1,
-                            summarizer2
+                            summarizer1
                     );
 
                     int[] countsReversed = addMSSResults(summaryReversed);
                     totalCombinations += countsReversed[0];
                     filteredCombinations += countsReversed[1];
-
-                    // MSS3
-                    MSS3 summary3 = new MSS3(
-                            "playlist_genre",
-                            predicate1,
-                            predicate2,
-                            SongRecord.genreStringtoDouble(predicate1),
-                            SongRecord.genreStringtoDouble(predicate2),
-                            quantifier,
-                            summarizer1,
-                            summarizer2
-                    );
-
-                    int[] counts3 = addMSSResults(summary3);
-                    totalCombinations += counts3[0];
-                    filteredCombinations += counts3[1];
-
-                    // MSS3 Reversed predicates
-                    MSS3 summary3Reversed = new MSS3(
-                            "playlist_genre",
-                            predicate2,
-                            predicate1,
-                            SongRecord.genreStringtoDouble(predicate2),
-                            SongRecord.genreStringtoDouble(predicate1),
-                            quantifier,
-                            summarizer1,
-                            summarizer2
-                    );
-
-                    int[] counts3Reversed = addMSSResults(summary3Reversed);
-                    totalCombinations += counts3Reversed[0];
-                    filteredCombinations += counts3Reversed[1];
                 }
             }
         }
-        // MSS4
-        for (Integer selectedSummarizerIndex : selectedSummarizerIndices) {
-            Summarizer summarizer = summarizers.get(selectedSummarizerIndex);
 
-            MSS4 summary = new MSS4(
-                    "playlist_genre",
-                    predicate1,
-                    predicate2,
-                    SongRecord.genreStringtoDouble(predicate1),
-                    SongRecord.genreStringtoDouble(predicate2),
-                    summarizer
-            );
+        if ((mss2Checkbox.isSelected() || mss3Checkbox.isSelected()) && !predicate2.equals(NO_PREDICATE)) {
+            for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
+                for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
+                    if (i == j) continue;
+                    Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
+                    Summarizer summarizer2 = summarizers.get(selectedSummarizerIndices.get(j));
 
-            int[] counts = addMSSResults(summary);
-            totalCombinations += counts[0];
-            filteredCombinations += counts[1];
+                    for (Quantifier quantifier : quantifiers) {
+                        if (!quantifier.isRelative()) {
+                            continue;
+                        }
 
-            // MSS4 Reversed predicates
-            MSS4 summaryReversed = new MSS4(
-                    "playlist_genre",
-                    predicate2,
-                    predicate1,
-                    SongRecord.genreStringtoDouble(predicate2),
-                    SongRecord.genreStringtoDouble(predicate1),
-                    summarizer
-            );
+                        if (mss2Checkbox.isSelected()) {
+                            MSS2 summary = new MSS2(
+                                    "playlist_genre",
+                                    predicate1,
+                                    predicate2,
+                                    SongRecord.genreStringtoDouble(predicate1),
+                                    SongRecord.genreStringtoDouble(predicate2),
+                                    quantifier,
+                                    summarizer1,
+                                    summarizer2
+                            );
 
-            int[] countsReversed = addMSSResults(summaryReversed);
-            totalCombinations += countsReversed[0];
-            filteredCombinations += countsReversed[1];
+                            int[] counts = addMSSResults(summary);
+                            totalCombinations += counts[0];
+                            filteredCombinations += counts[1];
+
+                            MSS2 summaryReversed = new MSS2(
+                                    "playlist_genre",
+                                    predicate2,
+                                    predicate1,
+                                    SongRecord.genreStringtoDouble(predicate2),
+                                    SongRecord.genreStringtoDouble(predicate1),
+                                    quantifier,
+                                    summarizer1,
+                                    summarizer2
+                            );
+
+                            int[] countsReversed = addMSSResults(summaryReversed);
+                            totalCombinations += countsReversed[0];
+                            filteredCombinations += countsReversed[1];
+                        }
+
+                        if (mss3Checkbox.isSelected()) {
+                            MSS3 summary3 = new MSS3(
+                                    "playlist_genre",
+                                    predicate1,
+                                    predicate2,
+                                    SongRecord.genreStringtoDouble(predicate1),
+                                    SongRecord.genreStringtoDouble(predicate2),
+                                    quantifier,
+                                    summarizer1,
+                                    summarizer2
+                            );
+
+                            int[] counts3 = addMSSResults(summary3);
+                            totalCombinations += counts3[0];
+                            filteredCombinations += counts3[1];
+
+                            MSS3 summary3Reversed = new MSS3(
+                                    "playlist_genre",
+                                    predicate2,
+                                    predicate1,
+                                    SongRecord.genreStringtoDouble(predicate2),
+                                    SongRecord.genreStringtoDouble(predicate1),
+                                    quantifier,
+                                    summarizer1,
+                                    summarizer2
+                            );
+
+                            int[] counts3Reversed = addMSSResults(summary3Reversed);
+                            totalCombinations += counts3Reversed[0];
+                            filteredCombinations += counts3Reversed[1];
+                        }
+                    }
+                }
+            }
+        }
+
+        if (mss4Checkbox.isSelected() && !predicate2.equals(NO_PREDICATE)) {
+            for (Integer selectedSummarizerIndex : selectedSummarizerIndices) {
+                Summarizer summarizer = summarizers.get(selectedSummarizerIndex);
+
+                MSS4 summary = new MSS4(
+                        "playlist_genre",
+                        predicate1,
+                        predicate2,
+                        SongRecord.genreStringtoDouble(predicate1),
+                        SongRecord.genreStringtoDouble(predicate2),
+                        summarizer
+                );
+
+                int[] counts = addMSSResults(summary);
+                totalCombinations += counts[0];
+                filteredCombinations += counts[1];
+
+                MSS4 summaryReversed = new MSS4(
+                        "playlist_genre",
+                        predicate2,
+                        predicate1,
+                        SongRecord.genreStringtoDouble(predicate2),
+                        SongRecord.genreStringtoDouble(predicate1),
+                        summarizer
+                );
+
+                int[] countsReversed = addMSSResults(summaryReversed);
+                totalCombinations += countsReversed[0];
+                filteredCombinations += countsReversed[1];
+            }
         }
 
 

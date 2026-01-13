@@ -462,7 +462,7 @@
     },
     {
       "name": "Pozytywność nastroju",
-      "fieldName": "valence",
+      "fieldName": "positivity",
       "universe": [
         0.0,
         1.0
