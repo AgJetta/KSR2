@@ -36,8 +36,8 @@ public class RefactoredSummaryGUI extends JFrame {
     private JComboBox<String> predicateCombo2;
 
     // UI Components - Summarizer Selection
-    private JList<String> summarizerSelectionList;
-    private DefaultListModel<String> summarizerListModel;
+    private JTable summarizerSelectionTable;
+    private DefaultTableModel summarizerSelectionModel;
 
     // UI Components - Results
     private DefaultTableModel tableModel;
@@ -216,7 +216,7 @@ public class RefactoredSummaryGUI extends JFrame {
                 Summarizer s = new Summarizer(name, field, fs, funcType, params, universe);
                 summarizers.add(s);
                 updateSummarizerTableForField(field);
-                updateSummarizerSelectionList();
+                updateSummarizerSelectionTable();
                 nameField.setText("");
                 paramField.setText("");
 
@@ -574,44 +574,62 @@ public class RefactoredSummaryGUI extends JFrame {
         JPanel summarizerPanel = new JPanel(new BorderLayout());
         summarizerPanel.setBorder(BorderFactory.createTitledBorder("Select Summarizers for Combination"));
 
-        summarizerListModel = new DefaultListModel<>();
-        summarizerSelectionList = new JList<>(summarizerListModel);
-        summarizerSelectionList.setSelectionMode(ListSelectionModel.MULTIPLE_INTERVAL_SELECTION);
-        summarizerSelectionList.setLayoutOrientation(JList.VERTICAL);
-        summarizerSelectionList.setVisibleRowCount(6);
-        updateSummarizerSelectionList(); // populate initially
+        summarizerSelectionModel = new DefaultTableModel(
+                new Object[]{"Select", "Negate", "Summarizer"}, 0) {
+            @Override
+            public Class<?> getColumnClass(int column) {
+                return column < 2 ? Boolean.class : String.class;
+            }
+            @Override
+            public boolean isCellEditable(int row, int column) {
+                return column < 2;
+            }
+        };
 
-        JScrollPane scrollPane = new JScrollPane(summarizerSelectionList);
+        summarizerSelectionTable = new JTable(summarizerSelectionModel);
+        summarizerSelectionTable.getColumnModel().getColumn(0).setMaxWidth(50);
+        summarizerSelectionTable.getColumnModel().getColumn(1).setMaxWidth(60);
+
+        updateSummarizerSelectionTable();
+
+        JScrollPane scrollPane = new JScrollPane(summarizerSelectionTable);
         scrollPane.setPreferredSize(new Dimension(400, 150));
 
-        // Selection control buttons
         JPanel selectionButtonPanel = new JPanel(new FlowLayout());
         JButton selectAllBtn = new JButton("Select All");
         JButton clearAllBtn = new JButton("Clear All");
 
-        selectAllBtn.addActionListener(e ->
-                summarizerSelectionList.setSelectionInterval(0, summarizerListModel.getSize() - 1));
-        clearAllBtn.addActionListener(e ->
-                summarizerSelectionList.clearSelection());
+        selectAllBtn.addActionListener(e -> {
+            for (int i = 0; i < summarizerSelectionModel.getRowCount(); i++) {
+                summarizerSelectionModel.setValueAt(true, i, 0);
+            }
+        });
+
+        clearAllBtn.addActionListener(e -> {
+            for (int i = 0; i < summarizerSelectionModel.getRowCount(); i++) {
+                summarizerSelectionModel.setValueAt(false, i, 0);
+                summarizerSelectionModel.setValueAt(false, i, 1);
+            }
+        });
 
         selectionButtonPanel.add(selectAllBtn);
         selectionButtonPanel.add(clearAllBtn);
 
-        summarizerPanel.add(new JLabel("Select summarizers to combine with the chosen predicate:"), BorderLayout.NORTH);
+        summarizerPanel.add(new JLabel("Select summarizers and optionally negate them:"), BorderLayout.NORTH);
         summarizerPanel.add(scrollPane, BorderLayout.CENTER);
         summarizerPanel.add(selectionButtonPanel, BorderLayout.SOUTH);
 
         add(summarizerPanel, BorderLayout.WEST);
     }
 
-    private void updateSummarizerSelectionList() {
-        if (summarizerListModel == null) return;
+    private void updateSummarizerSelectionTable() {
+        if (summarizerSelectionModel == null) return;
 
-        summarizerListModel.clear();
+        summarizerSelectionModel.setRowCount(0);
         for (Summarizer s : summarizers) {
             String fieldName = s.getFieldName(0);
             String displayName = fieldName + ": " + s.getName();
-            summarizerListModel.addElement(displayName);
+            summarizerSelectionModel.addRow(new Object[]{false, false, displayName});
         }
     }
 
@@ -752,8 +770,17 @@ public class RefactoredSummaryGUI extends JFrame {
         }
 
         // Get selected summarizers for combination
-        List<Integer> selectedSummarizerIndices = Arrays.stream(summarizerSelectionList.getSelectedIndices())
-                .boxed().collect(Collectors.toList());
+        List<Integer> selectedSummarizerIndices = new ArrayList<>();
+        List<Boolean> negationFlags = new ArrayList<>();
+
+        for (int i = 0; i < summarizerSelectionModel.getRowCount(); i++) {
+            Boolean selected = (Boolean) summarizerSelectionModel.getValueAt(i, 0);
+            if (Boolean.TRUE.equals(selected)) {
+                selectedSummarizerIndices.add(i);
+                Boolean negate = (Boolean) summarizerSelectionModel.getValueAt(i, 1);
+                negationFlags.add(Boolean.TRUE.equals(negate));
+            }
+        }
 
         if (selectedSummarizerIndices.isEmpty()) {
             statusLabel.setText("Please select at least one summarizer for combination");
@@ -766,8 +793,26 @@ public class RefactoredSummaryGUI extends JFrame {
 
         List<Summarizer> summarizersToUse = new ArrayList<>();
 
-        for (int idx : selectedSummarizerIndices) {
-            summarizersToUse.add(summarizers.get(idx));
+        for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
+            int idx = selectedSummarizerIndices.get(i);
+            boolean negate = negationFlags.get(i);
+
+            Summarizer baseSummarizer = summarizers.get(idx);
+
+            if (negate) {
+                FuzzySet complementedSet = baseSummarizer.getFuzzySet(0).complement();
+                Summarizer negatedSummarizer = new Summarizer(
+                        "NOT " + baseSummarizer.getName(),
+                        baseSummarizer.getFieldName(0),
+                        complementedSet,
+                        baseSummarizer.getFunctionType(),
+                        baseSummarizer.getParameters(),
+                        baseSummarizer.getUniverse()
+                );
+                summarizersToUse.add(negatedSummarizer);
+            } else {
+                summarizersToUse.add(baseSummarizer);
+            }
         }
 
         if (twoSummarizersCheckbox.isSelected()) {
@@ -784,10 +829,10 @@ public class RefactoredSummaryGUI extends JFrame {
                     return;
                 }
 
-                for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
-                    for (int j = i + 1; j < selectedSummarizerIndices.size(); j++) {
-                        Summarizer s1 = summarizers.get(selectedSummarizerIndices.get(i));
-                        Summarizer s2 = summarizers.get(selectedSummarizerIndices.get(j));
+                for (int i = 0; i < summarizersToUse.size(); i++) {
+                    for (int j = i + 1; j < summarizersToUse.size(); j++) {
+                        Summarizer s1 = summarizersToUse.get(i);
+                        Summarizer s2 = summarizersToUse.get(j);
 
                         if (useAnd) {
                             Summarizer compound = new Summarizer(
@@ -1183,11 +1228,12 @@ public class RefactoredSummaryGUI extends JFrame {
         predicateCombo1.setBackground(Color.WHITE);
         predicateCombo2.setBackground(Color.WHITE);
 
-        // Style list
-        summarizerSelectionList.setFont(coolFont);
-        summarizerSelectionList.setBackground(babyBlue);
+        // Style selection table
+        summarizerSelectionTable.setFont(coolFont);
+        summarizerSelectionTable.setBackground(babyBlue);
+        summarizerSelectionTable.getTableHeader().setFont(boldFont);
 
-        // Style table
+        // Style results table
         resultsTable.setFont(new Font("Comic Sans MS", Font.PLAIN, 12));
         resultsTable.getTableHeader().setFont(boldFont);
         resultsTable.setBackground(new Color(160, 160, 160));
