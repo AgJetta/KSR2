@@ -34,43 +34,36 @@ public class ConfigImporter {
         try {
             JSONObject config = loadConfig();
 
-            // Access quantifiers array
             JSONArray json_quantifiers = config.getJSONArray("quantifiers");
             for (int i = 0; i < json_quantifiers.length(); i++) {
                 JSONObject quantifierObj = json_quantifiers.getJSONObject(i);
 
-                // Extract basic properties
                 String quantifierName = quantifierObj.getString("name");
                 String functionType = quantifierObj.getString("functionType");
                 JSONArray parametersArray = quantifierObj.getJSONArray("parameters");
                 boolean isRelative = quantifierObj.getBoolean("relative");
 
-                // Convert JSONArray of parameters to double[]
                 double[] parameters = new double[parametersArray.length()];
                 for (int j = 0; j < parametersArray.length(); j++) {
                     parameters[j] = parametersArray.getDouble(j);
                 }
 
-                // Extract universe
                 JSONArray universeArray = quantifierObj.getJSONArray("universe");
                 double universeMin = universeArray.getDouble(0);
                 double universeMax = universeArray.getDouble(1);
                 Universe universe = new Universe(universeMin, universeMax, isRelative);
 
-                // Create membership function
                 MembershipFunction membershipFunction = createMembershipFunction(functionType, parametersArray);
 
-                // Create fuzzy set
                 FuzzySet fuzzySet = new FuzzySet(universe, membershipFunction);
 
-                // Optional: clamp values for display (not used for calculation)
+                // clamp values for display (not used for calculation)
                 double quantifierMinValue = parameters[0];
                 double quantifierMaxValue = parameters[parameters.length - 1];
                 if (quantifierMinValue < 0.0) quantifierMinValue = 0.0;
                 if (isRelative && quantifierMaxValue > 1.0) quantifierMaxValue = 1.0;
                 if (quantifierMaxValue > universeMax) quantifierMaxValue = universeMax;
 
-                // Create quantifier with new constructor (includes functionType and parameters)
                 Quantifier q = new Quantifier(
                         quantifierName,
                         fuzzySet,
@@ -112,7 +105,7 @@ public class ConfigImporter {
                 for (int j = 0; j < terms.length(); j++) {
                     JSONObject term = terms.getJSONObject(j);
 
-                    String termName = term.getString("name");              // e.g. "fast"
+                    String termName = term.getString("name");
                     String functionType = term.getString("functionType");
 
                     JSONArray paramArray = term.getJSONArray("parameters");
@@ -121,18 +114,15 @@ public class ConfigImporter {
                         params[k] = paramArray.getDouble(k);
                     }
 
-                    // Create membership function
                     MembershipFunction mf = createMembershipFunction(functionType, paramArray);
 
-                    // Create fuzzy set
                     FuzzySet fuzzySet = new FuzzySet(universe, mf);
 
-                    // ✅ CORRECT constructor
                     Summarizer summarizer = new Summarizer(
-                            termName,          // summarizer name
-                            fieldName,         // DB field
+                            termName,
+                            fieldName,
                             fuzzySet,
-                            functionType,      // metadata for GUI
+                            functionType,
                             params,
                             universe
                     );
@@ -213,14 +203,6 @@ public class ConfigImporter {
         }
     }
 
-    /**
-     * Creates compound summarizers by combining simple ones with logical connectives.
-     *
-     * @param simpleSummarizers List of simple summarizers loaded from config
-     * @param combinations Each int[] specifies indices of summarizers to combine
-     * @param connectives Each LogicalConnective[] specifies connectives between components
-     * @return List of compound summarizers
-     */
     public static List<Summarizer> createCompoundSummarizers(
             List<Summarizer> simpleSummarizers,
             List<int[]> combinations,
@@ -242,7 +224,6 @@ public class ConfigImporter {
                         "Number of connectives must be one less than number of components");
             }
 
-            // Gather components
             List<String> fieldNames = new ArrayList<>();
             List<FuzzySet> fuzzySets = new ArrayList<>();
             List<String> lingVars = new ArrayList<>();
@@ -261,10 +242,8 @@ public class ConfigImporter {
                 lingVars.add(s.getLinguisticVariable(0));
             }
 
-            // Build name
             String name = buildCompoundName(simpleSummarizers, indices, conns);
 
-            // Create compound summarizer
             List<LogicalConnective> connList = Arrays.asList(conns);
             Summarizer compound = new Summarizer(name, fieldNames, fuzzySets, connList, lingVars);
             compounds.add(compound);
@@ -288,7 +267,6 @@ public class ConfigImporter {
 
 
     public static void main(String[] args) throws Exception {
-        // Load and create summarizers
         List<Summarizer> summarizers = loadSummarizersFromConfig();
 
         System.out.println("\n=== Created Summarizers ===");
@@ -297,20 +275,17 @@ public class ConfigImporter {
                     " (field: " + summarizer.getFieldName(1) + ")");
         }
 
-        // Original config reading code for reference
         System.out.println("\n=== Original Config Analysis ===");
         InputStream input = ConfigImporter.class.getClassLoader().getResourceAsStream("org/dataLoader/config.json");
         assert input != null;
         String jsonText = new Scanner(input, StandardCharsets.UTF_8).useDelimiter("\\A").next();
         JSONObject config = new JSONObject(jsonText);
 
-        // Access function types
         JSONArray functionTypes = config.getJSONArray("functionTypes");
         for (int i = 0; i < functionTypes.length(); i++) {
             System.out.println("Function type: " + functionTypes.getString(i));
         }
 
-        // Access quantifiers
         JSONArray quantifiers = config.getJSONArray("quantifiers");
         for (int i = 0; i < quantifiers.length(); i++) {
             JSONObject q = quantifiers.getJSONObject(i);

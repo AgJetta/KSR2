@@ -10,14 +10,12 @@ import java.util.List;
 
 public class Summarizer {
 
-    // ===== Core representation =====
     private final String name;
     private final List<String> fieldNames;
     private final List<FuzzySet> fuzzySets;
     private final List<LogicalConnective> connectives;
     private final List<String> linguisticVariables;
 
-    // ===== Metadata (ONLY for atomic summarizers) =====
     private final String functionType;     // null for compound
     private final double[] parameters;     // null for compound
     private final Universe universe;        // null for compound
@@ -93,7 +91,6 @@ public class Summarizer {
         return fuzzySets.size();
     }
 
-    // ===== Metadata getters (safe for GUI) =====
     public String getFunctionType() {
         return functionType;
     }

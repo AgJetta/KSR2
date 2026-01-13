@@ -108,7 +108,6 @@ public class RefactoredSummaryGUI extends JFrame {
         JPanel mainPanel = new JPanel(new BorderLayout());
         JPanel leftPanel = new JPanel(new BorderLayout());
 
-        // ===== Use all fields from loaded summarizers =====
         List<String> fields = summarizers.stream()
                 .map(s -> s.getFieldName(0))   // get field name
                 .distinct()                     // remove duplicates
@@ -119,7 +118,6 @@ public class RefactoredSummaryGUI extends JFrame {
         JTextField universeField = new JTextField(15);
         universeField.setEditable(false);
 
-        // Map fields to their universe ranges
         Map<String, Universe> fieldUniverses = summarizers.stream()
                 .collect(Collectors.toMap(
                         s -> s.getFieldName(0),
@@ -140,7 +138,6 @@ public class RefactoredSummaryGUI extends JFrame {
 
         fieldBox.setSelectedIndex(0);
 
-        // ===== Rest of the form =====
         JTextField nameField = new JTextField(15);
         JComboBox<String> functionTypeBox = new JComboBox<>(new String[]{"triangular", "trapezoidal", "gaussian", "rampUp", "rampDown", "crisp"}
         );
@@ -158,14 +155,12 @@ public class RefactoredSummaryGUI extends JFrame {
         formPanel.add(new JLabel("Parameters (comma-separated):"));
         formPanel.add(paramField);
 
-        // ===== TABLE =====
         summarizerTableModel = new DefaultTableModel(
                 new Object[]{"Name", "Field", "Function", "Universe", "Parameters"}, 0
         );
         summarizerTable = new JTable(summarizerTableModel);
         JScrollPane scrollPane = new JScrollPane(summarizerTable);
 
-        // ===== ADD BUTTON =====
         JButton addButton = new JButton("Add Summarizer");
         addButton.addActionListener(e -> {
             try {
@@ -234,7 +229,6 @@ public class RefactoredSummaryGUI extends JFrame {
         leftPanel.add(scrollPane, BorderLayout.CENTER);
         leftPanel.add(addButton, BorderLayout.SOUTH);
 
-        // ===== RIGHT SIDE: EXAMPLES =====
         JTextArea exampleTextArea = new JTextArea();
         exampleTextArea.setEditable(false);
         exampleTextArea.setText(
@@ -304,12 +298,10 @@ public class RefactoredSummaryGUI extends JFrame {
 
 
     private void openAdvancedSettingsDialog() {
-        // Create a modal dialog
         JDialog dialog = new JDialog(this, "Zaawansowane ustawienia", true);
         dialog.setSize(1800, 1000);
         dialog.setLocationRelativeTo(this);
 
-        // Create tabbed pane with quantifiers tab
         JTabbedPane tabbedPane = new JTabbedPane();
         tabbedPane.addTab("Quantifiers", createQuantifierPanel(dialog));
         tabbedPane.addTab("Qualifiers/Summarizers", createSummarizerPanel(dialog));
@@ -491,7 +483,6 @@ public class RefactoredSummaryGUI extends JFrame {
         summarizers = ConfigImporter.loadSummarizersFromConfig();
         dataset = CsvSongImporter.importSongs(30000);
 
-        // Configure summarizers and quantifiers as in original
         for (Summarizer summarizer : summarizers) {
             summarizer.getFuzzySet(0).getUniverse().setCardinalNumber(dataset.size());
         }
@@ -553,7 +544,6 @@ public class RefactoredSummaryGUI extends JFrame {
         add(predicatePanel, BorderLayout.NORTH);
     }
 
-    // Method to update the measureWeights list from the text fields
     private void updateMeasureWeights() {
         for (int i = 0; i < 10; i++) {
             try {
@@ -564,7 +554,6 @@ public class RefactoredSummaryGUI extends JFrame {
         }
     }
 
-    // Method to get current weights (useful for other parts of your application)
     public List<Double> getMeasureWeights() {
         updateMeasureWeights();
         return new ArrayList<>(measureWeights);
@@ -769,7 +758,6 @@ public class RefactoredSummaryGUI extends JFrame {
             return;
         }
 
-        // Get selected summarizers for combination
         List<Integer> selectedSummarizerIndices = new ArrayList<>();
         List<Boolean> negationFlags = new ArrayList<>();
 
@@ -1086,14 +1074,12 @@ public class RefactoredSummaryGUI extends JFrame {
     private int[] addMSSResults(MSS1 summary) {
         int totalCombinations = 0;
         int filteredCombinations = 0;
-        // Calculate all T values
         double[] tValues = new double[12];
         tValues[0] = summary.calculateT1(dataset);
         for (int j = 1; j < 12; j++) {
             tValues[j] = 0.0;
         }
         totalCombinations++;
-        // Filter out zero/low values (you can adjust this threshold)
         if (tValues[0] > 0.001) { // Using small threshold instead of exactly 0
             String summaryText = summary.generateSummary();
             SummaryResult result = new SummaryResult(summaryText, tValues);

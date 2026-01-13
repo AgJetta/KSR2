@@ -10,7 +10,6 @@ public class Quantifier {
     private final FuzzySet fuzzySet;
     private final boolean isRelative;
 
-    // NEW: store membership function type and parameters for display
     private final String functionType;
     private final double[] parameters;
 
