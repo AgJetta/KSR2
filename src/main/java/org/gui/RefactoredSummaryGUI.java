@@ -62,6 +62,8 @@ public class RefactoredSummaryGUI extends JFrame {
     private JCheckBox mss4Checkbox;
     private JCheckBox twoSummarizersCheckbox;
     private JSpinner maxCompoundSpinner;
+    private JCheckBox andConnectiveCheckbox;
+    private JCheckBox orConnectiveCheckbox;
 
     private List<SummaryResult> allResults = new ArrayList<>();
 
@@ -630,6 +632,9 @@ public class RefactoredSummaryGUI extends JFrame {
         twoSummarizersCheckbox = new JCheckBox("Compound Summarizers", false);
         maxCompoundSpinner = new JSpinner(new SpinnerNumberModel(1, 1, 10, 1));
 
+        andConnectiveCheckbox = new JCheckBox("AND", true);
+        orConnectiveCheckbox = new JCheckBox("OR", false);
+
         checkboxPanel.add(f1Checkbox);
         checkboxPanel.add(f2Checkbox);
         checkboxPanel.add(mss1Checkbox);
@@ -640,6 +645,10 @@ public class RefactoredSummaryGUI extends JFrame {
         checkboxPanel.add(twoSummarizersCheckbox);
         checkboxPanel.add(new JLabel("Max components:"));
         checkboxPanel.add(maxCompoundSpinner);
+        checkboxPanel.add(Box.createHorizontalStrut(10));
+        checkboxPanel.add(new JLabel("Connectives:"));
+        checkboxPanel.add(andConnectiveCheckbox);
+        checkboxPanel.add(orConnectiveCheckbox);
 
         JPanel controlPanel = new JPanel(new FlowLayout());
         controlPanel.setBorder(BorderFactory.createTitledBorder("Actions"));
@@ -765,19 +774,42 @@ public class RefactoredSummaryGUI extends JFrame {
             int maxComponents = (int) maxCompoundSpinner.getValue();
             if (maxComponents >= 2) {
                 List<Summarizer> compoundSummarizers = new ArrayList<>();
+
+                boolean useAnd = andConnectiveCheckbox.isSelected();
+                boolean useOr = orConnectiveCheckbox.isSelected();
+
+                if (!useAnd && !useOr) {
+                    statusLabel.setText("Please select at least one connective (AND or OR)");
+                    statusLabel.setForeground(Color.RED);
+                    return;
+                }
+
                 for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
                     for (int j = i + 1; j < selectedSummarizerIndices.size(); j++) {
                         Summarizer s1 = summarizers.get(selectedSummarizerIndices.get(i));
                         Summarizer s2 = summarizers.get(selectedSummarizerIndices.get(j));
 
-                        Summarizer compound = new Summarizer(
-                                s1.getName() + " AND " + s2.getName(),
-                                List.of(s1.getFieldName(0), s2.getFieldName(0)),
-                                List.of(s1.getFuzzySet(0), s2.getFuzzySet(0)),
-                                List.of(LogicalConnective.AND),
-                                List.of(s1.getLinguisticVariable(0), s2.getLinguisticVariable(0))
-                        );
-                        compoundSummarizers.add(compound);
+                        if (useAnd) {
+                            Summarizer compound = new Summarizer(
+                                    s1.getName() + " AND " + s2.getName(),
+                                    List.of(s1.getFieldName(0), s2.getFieldName(0)),
+                                    List.of(s1.getFuzzySet(0), s2.getFuzzySet(0)),
+                                    List.of(LogicalConnective.AND),
+                                    List.of(s1.getLinguisticVariable(0), s2.getLinguisticVariable(0))
+                            );
+                            compoundSummarizers.add(compound);
+                        }
+
+                        if (useOr) {
+                            Summarizer compound = new Summarizer(
+                                    s1.getName() + " OR " + s2.getName(),
+                                    List.of(s1.getFieldName(0), s2.getFieldName(0)),
+                                    List.of(s1.getFuzzySet(0), s2.getFuzzySet(0)),
+                                    List.of(LogicalConnective.OR),
+                                    List.of(s1.getLinguisticVariable(0), s2.getLinguisticVariable(0))
+                            );
+                            compoundSummarizers.add(compound);
+                        }
                     }
                 }
                 summarizersToUse = compoundSummarizers;
