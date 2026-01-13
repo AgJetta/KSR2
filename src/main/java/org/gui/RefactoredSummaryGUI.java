@@ -755,41 +755,67 @@ public class RefactoredSummaryGUI extends JFrame {
         int totalCombinations = 0;
         int filteredCombinations = 0;
 
-        if (f1Checkbox.isSelected()) {
-            for (int summarizerIndex : selectedSummarizerIndices) {
-                Summarizer summarizer = summarizers.get(summarizerIndex);
-                for (Quantifier quantifier : quantifiers) {
-                    for (String predicate : selectedPredicates) {
-                        LinguisticSummary summary = new LinguisticSummary(
-                                quantifier,
-                                "utworów",
-                                summarizer
+        List<Summarizer> summarizersToUse = new ArrayList<>();
+
+        for (int idx : selectedSummarizerIndices) {
+            summarizersToUse.add(summarizers.get(idx));
+        }
+
+        if (twoSummarizersCheckbox.isSelected()) {
+            int maxComponents = (int) maxCompoundSpinner.getValue();
+            if (maxComponents >= 2) {
+                List<Summarizer> compoundSummarizers = new ArrayList<>();
+                for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
+                    for (int j = i + 1; j < selectedSummarizerIndices.size(); j++) {
+                        Summarizer s1 = summarizers.get(selectedSummarizerIndices.get(i));
+                        Summarizer s2 = summarizers.get(selectedSummarizerIndices.get(j));
+
+                        Summarizer compound = new Summarizer(
+                                s1.getName() + " AND " + s2.getName(),
+                                List.of(s1.getFieldName(0), s2.getFieldName(0)),
+                                List.of(s1.getFuzzySet(0), s2.getFuzzySet(0)),
+                                List.of(LogicalConnective.AND),
+                                List.of(s1.getLinguisticVariable(0), s2.getLinguisticVariable(0))
                         );
-                        LinguisticSummary.setMeasureWeights(getMeasureWeights());
+                        compoundSummarizers.add(compound);
+                    }
+                }
+                summarizersToUse = compoundSummarizers;
+            }
+        }
 
-                        double[] tValues = calculateAllTValues(summary);
-                        double t1 = tValues[0];
+        if (f1Checkbox.isSelected()) {
+            for (Summarizer summarizer : summarizersToUse) {
+                for (Quantifier quantifier : quantifiers) {
+                    LinguisticSummary summary = new LinguisticSummary(
+                            quantifier,
+                            "utworów",
+                            summarizer
+                    );
+                    LinguisticSummary.setMeasureWeights(getMeasureWeights());
 
-                        totalCombinations++;
+                    double[] tValues = calculateAllTValues(summary);
+                    double t1 = tValues[0];
 
-                        if (t1 > 0.001) {
-                            String summaryText = summary.generateSummary();
-                            SummaryResult result = new SummaryResult(summaryText, tValues);
-                            allResults.add(result);
-                            addResultToTable(result);
-                            filteredCombinations++;
-                        }
+                    totalCombinations++;
+
+                    if (t1 > 0.001) {
+                        String summaryText = summary.generateSummary();
+                        SummaryResult result = new SummaryResult(summaryText, tValues);
+                        allResults.add(result);
+                        addResultToTable(result);
+                        filteredCombinations++;
                     }
                 }
             }
         }
 
         if (f2Checkbox.isSelected()) {
-            for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
-                for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
+            for (int i = 0; i < summarizersToUse.size(); i++) {
+                for (int j = 0; j < summarizersToUse.size(); j++) {
                     if (i == j) continue;
-                    Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
-                    Summarizer summarizer2 = summarizers.get(selectedSummarizerIndices.get(j));
+                    Summarizer summarizer1 = summarizersToUse.get(i);
+                    Summarizer summarizer2 = summarizersToUse.get(j);
 
                     for (Quantifier quantifier : quantifiers) {
                         if (!quantifier.isRelative()) {
@@ -820,52 +846,6 @@ public class RefactoredSummaryGUI extends JFrame {
             }
         }
 
-        if (twoSummarizersCheckbox.isSelected() && (int) maxCompoundSpinner.getValue() >= 2) {
-            for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
-                for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
-                    if (i == j) continue;
-
-                    Summarizer s1 = summarizers.get(selectedSummarizerIndices.get(i));
-                    Summarizer s2 = summarizers.get(selectedSummarizerIndices.get(j));
-
-                    for (Quantifier quantifier : quantifiers) {
-                        if (!quantifier.isRelative()) continue;
-
-                        Summarizer compoundSummarizer = new Summarizer(
-                                s1.getName() + " AND " + s2.getName(),
-                                List.of(s1.getFieldName(0), s2.getFieldName(0)),
-                                List.of(s1.getFuzzySet(0), s2.getFuzzySet(0)),
-                                List.of(LogicalConnective.AND),
-                                List.of(
-                                        s1.getLinguisticVariable(0),
-                                        s2.getLinguisticVariable(0)
-                                )
-                        );
-                        LinguisticSummary summary = new LinguisticSummary(
-                                quantifier,
-                                "utworów",
-                                compoundSummarizer
-                        );
-
-                        double[] tValues = calculateAllTValues(summary);
-                        double t1 = tValues[0];
-
-                        totalCombinations++;
-
-                        if (t1 > 0.001) {
-                            SummaryResult result = new SummaryResult(
-                                    summary.generateSummary(),
-                                    tValues
-                            );
-                            allResults.add(result);
-                            addResultToTable(result);
-                            filteredCombinations++;
-                        }
-                    }
-                }
-            }
-        }
-
         if (predicate2.equals(NO_PREDICATE)) {
             statusLabel.setText(String.format("Generated %d first-order combinations, %d passed filter",
                     totalCombinations, filteredCombinations));
@@ -874,9 +854,7 @@ public class RefactoredSummaryGUI extends JFrame {
         }
 
         if (mss1Checkbox.isSelected() && !predicate2.equals(NO_PREDICATE)) {
-            for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
-                Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
-
+            for (Summarizer summarizer1 : summarizersToUse) {
                 for (Quantifier quantifier : quantifiers) {
                     if (!quantifier.isRelative()) {
                         continue;
@@ -913,11 +891,11 @@ public class RefactoredSummaryGUI extends JFrame {
         }
 
         if ((mss2Checkbox.isSelected() || mss3Checkbox.isSelected()) && !predicate2.equals(NO_PREDICATE)) {
-            for (int i = 0; i < selectedSummarizerIndices.size(); i++) {
-                for (int j = 0; j < selectedSummarizerIndices.size(); j++) {
+            for (int i = 0; i < summarizersToUse.size(); i++) {
+                for (int j = 0; j < summarizersToUse.size(); j++) {
                     if (i == j) continue;
-                    Summarizer summarizer1 = summarizers.get(selectedSummarizerIndices.get(i));
-                    Summarizer summarizer2 = summarizers.get(selectedSummarizerIndices.get(j));
+                    Summarizer summarizer1 = summarizersToUse.get(i);
+                    Summarizer summarizer2 = summarizersToUse.get(j);
 
                     for (Quantifier quantifier : quantifiers) {
                         if (!quantifier.isRelative()) {
@@ -993,9 +971,7 @@ public class RefactoredSummaryGUI extends JFrame {
         }
 
         if (mss4Checkbox.isSelected() && !predicate2.equals(NO_PREDICATE)) {
-            for (Integer selectedSummarizerIndex : selectedSummarizerIndices) {
-                Summarizer summarizer = summarizers.get(selectedSummarizerIndex);
-
+            for (Summarizer summarizer : summarizersToUse) {
                 MSS4 summary = new MSS4(
                         "playlist_genre",
                         predicate1,
