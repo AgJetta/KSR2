@@ -28,8 +28,8 @@
       "functionType": "triangular",
       "parameters": [
         0.74,
-        1.0,
-        2
+        0.995,
+        1
       ],
       "universe": [
         0,
@@ -41,9 +41,9 @@
       "relative": true,
       "functionType": "triangular",
       "parameters": [
-        0.0,
+        0.1,
         0.3333333,
-        0.6666667
+        0.5666667
       ],
       "universe": [
         0,
@@ -51,14 +51,59 @@
       ]
     },
     {
-      "name": "MNIEJ NIŻ 100",
+      "name": "DWIE TRZECIE (2/3)",
+      "relative": true,
+      "functionType": "triangular",
+      "parameters": [
+        0.4333333,
+        0.6666666,
+        0.9
+      ],
+      "universe": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "MAŁO",
+      "relative": true,
+      "functionType": "trapezoidal",
+      "parameters": [
+        0.0,
+        0.0,
+        0.1,
+        0.25
+      ],
+      "universe": [
+        0,
+        1
+      ]
+    },
+    {
+      "name": "MNIEJ NIŻ 300",
       "relative": false,
       "functionType": "trapezoidal",
       "parameters": [
         0,
         0,
-        95,
-        100
+        290,
+        300
+      ],
+      "universe": [
+        0,
+        30000
+      ]
+    },
+
+    {
+      "name": "WIĘCEJ NIŻ 1000",
+      "relative": false,
+      "functionType": "trapezoidal",
+      "parameters": [
+        1000,
+        1100,
+        30000,
+        30500
       ],
       "universe": [
         0,
@@ -66,12 +111,12 @@
       ]
     },
     {
-      "name": "WIĘCEJ NIŻ 1000",
+      "name": "WIĘCEJ NIŻ 5000",
       "relative": false,
       "functionType": "trapezoidal",
       "parameters": [
-        1000,
-        2000,
+        5000,
+        5500,
         30000,
         30500
       ],
@@ -135,37 +180,37 @@
           "functionType": "trapezoidal",
           "parameters": [
             -2,
-            0,
-            5,
-            10
+            -2,
+            40,
+            50
           ]
         },
         {
           "name": "Cicha",
           "functionType": "trapezoidal",
           "parameters": [
-            0,
-            10,
-            20,
-            40
+            40,
+            45,
+            48,
+            55
           ]
         },
         {
           "name": "Umiarkowana głośność",
           "functionType": "trapezoidal",
           "parameters": [
-            20,
-            40,
             45,
-            55
+            52,
+            55,
+            60
           ]
         },
         {
           "name": "Głośna",
           "functionType": "trapezoidal",
           "parameters": [
-            45,
             55,
+            60,
             100,
             105
           ]
@@ -173,6 +218,7 @@
       ]
     },
     {
+
       "name": "Czas trwania",
       "fieldName": "duration_ms",
       "universe": [
@@ -210,6 +256,33 @@
           "parameters": [
             450000,
             75000
+          ]
+        },
+        {
+          "name": "Około 2 minut",
+          "functionType": "triangular",
+          "parameters": [
+            110000,
+            120000,
+            130000
+          ]
+        },
+        {
+          "name": "Około 3 minut",
+          "functionType": "triangular",
+          "parameters": [
+            220000,
+            240000,
+            260000
+          ]
+        },
+        {
+          "name": "Około 5 minut",
+          "functionType": "triangular",
+          "parameters": [
+            270000,
+            300000,
+            330000
           ]
         }
       ]
