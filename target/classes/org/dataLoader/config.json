@@ -9,6 +9,19 @@
   ],
   "quantifiers": [
     {
+      "name": "KWADRAT[test]",
+      "relative": true,
+      "functionType": "rampDown",
+      "parameters": [
+        0.49,
+        0.5
+      ],
+      "universe": [
+        0,
+        1
+      ]
+    },
+    {
       "name": "OKOŁO POŁOWY",
       "relative": true,
       "functionType": "triangular",
@@ -25,11 +38,10 @@
     {
       "name": "PRAWIE WSZYSTKIE",
       "relative": true,
-      "functionType": "triangular",
+      "functionType": "rampUp",
       "parameters": [
         0.74,
-        0.995,
-        1
+        0.95
       ],
       "universe": [
         0,
@@ -67,10 +79,8 @@
     {
       "name": "MAŁO",
       "relative": true,
-      "functionType": "trapezoidal",
+      "functionType": "rampDown",
       "parameters": [
-        0.0,
-        0.05,
         0.1,
         0.25
       ],
@@ -82,10 +92,8 @@
     {
       "name": "MNIEJ NIŻ 300",
       "relative": false,
-      "functionType": "trapezoidal",
+      "functionType": "rampDown",
       "parameters": [
-        0,
-        0,
         290,
         300
       ],
@@ -94,7 +102,19 @@
         30000
       ]
     },
-
+    {
+      "name": "MNIEJ NIŻ 2000",
+      "relative": false,
+      "functionType": "rampDown",
+      "parameters": [
+        1900,
+        2000
+      ],
+      "universe": [
+        0,
+        30000
+      ]
+    },
     {
       "name": "WIĘCEJ NIŻ 1000",
       "relative": false,
@@ -137,10 +157,8 @@
       "terms": [
         {
           "name": "Nisza",
-          "functionType": "trapezoidal",
+          "functionType": "rampDown",
           "parameters": [
-            -2,
-            0,
             20,
             40
           ]
@@ -177,10 +195,8 @@
       "terms": [
         {
           "name": "Bardzo cicha",
-          "functionType": "trapezoidal",
+          "functionType": "rampDown",
           "parameters": [
-            -2,
-            -1,
             40,
             50
           ]
@@ -297,10 +313,8 @@
       "terms": [
         {
           "name": "Słaba",
-          "functionType": "trapezoidal",
+          "functionType": "rampDown",
           "parameters": [
-            -0.1,
-            0.0,
             0.1,
             0.3
           ]
@@ -337,10 +351,8 @@
       "terms": [
         {
           "name": "Full synth",
-          "functionType": "trapezoidal",
+          "functionType": "rampDown",
           "parameters": [
-            -0.1,
-            0.0,
             0.05,
             0.1
           ]
@@ -349,20 +361,20 @@
           "name": "Elektroniczna",
           "functionType": "trapezoidal",
           "parameters": [
-            0.1,
-            0.2,
+            0.05,
+            0.15,
             0.25,
-            0.3
+            0.35
           ]
         },
         {
           "name": "Elektro-akustyczna",
           "functionType": "trapezoidal",
           "parameters": [
-            0.3,
-            0.45,
-            0.5,
-            0.6
+            0.2,
+            0.35,
+            0.55,
+            0.7
           ]
         },
         {
@@ -370,19 +382,17 @@
           "functionType": "trapezoidal",
           "parameters": [
             0.6,
-            0.75,
+            0.7,
             0.8,
             0.9
           ]
         },
         {
           "name": "Unplugged",
-          "functionType": "trapezoidal",
+          "functionType": "rampUp",
           "parameters": [
             0.8,
-            0.9,
-            1.0,
-            1.1
+            0.9
           ]
         }
       ]
@@ -455,10 +465,8 @@
       "terms": [
         {
           "name": "Wokalna",
-          "functionType": "trapezoidal",
+          "functionType": "rampDown",
           "parameters": [
-            -0.2,
-            0.0,
             0.2,
             0.4
           ]

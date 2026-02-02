@@ -1,7 +1,7 @@
 package org.fuzzy;
 
 import org.apache.commons.math3.analysis.UnivariateFunction;
-import org.apache.commons.math3.analysis.integration.SimpsonIntegrator;
+import org.apache.commons.math3.analysis.integration.TrapezoidIntegrator;
 import org.fuzzy.membershipFunctions.MembershipFunction;
 import org.fuzzy.membershipFunctions.MembershipFunctions;
 
@@ -279,13 +279,9 @@ public class FuzzySet {
         }
 
         UnivariateFunction integrand = x -> membershipFunction.apply(x);
-        SimpsonIntegrator integrator = new SimpsonIntegrator(1e-6, 1e-10, 2, 64);
+        TrapezoidIntegrator integrator = new TrapezoidIntegrator(1e-6, 1e-10, 2, 64);
 
-        try {
-            return integrator.integrate(10000, integrand, universe.getStart(), universe.getEnd());
-        } catch (Exception e) {
-            return trapezoidalIntegration(integrand, universe.getStart(), universe.getEnd(), 1000);
-        }
+        return integrator.integrate(10000, integrand, universe.getStart(), universe.getEnd());
     }
 
     private double trapezoidalIntegration(UnivariateFunction f, double a, double b, int n) {

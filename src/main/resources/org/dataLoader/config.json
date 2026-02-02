@@ -25,12 +25,10 @@
     {
       "name": "PRAWIE WSZYSTKIE",
       "relative": true,
-      "functionType": "trapezoidal",
+      "functionType": "rampUp",
       "parameters": [
         0.74,
-        0.95,
-        1,
-        1
+        0.95
       ],
       "universe": [
         0,
@@ -68,10 +66,8 @@
     {
       "name": "MAŁO",
       "relative": true,
-      "functionType": "trapezoidal",
+      "functionType": "rampDown",
       "parameters": [
-        0.0,
-        0.0,
         0.1,
         0.25
       ],
@@ -83,10 +79,8 @@
     {
       "name": "MNIEJ NIŻ 300",
       "relative": false,
-      "functionType": "trapezoidal",
+      "functionType": "rampDown",
       "parameters": [
-        0,
-        0,
         290,
         300
       ],
@@ -98,10 +92,8 @@
     {
       "name": "MNIEJ NIŻ 2000",
       "relative": false,
-      "functionType": "trapezoidal",
+      "functionType": "rampDown",
       "parameters": [
-        0,
-        0,
         1900,
         2000
       ],
@@ -152,10 +144,8 @@
       "terms": [
         {
           "name": "Nisza",
-          "functionType": "trapezoidal",
+          "functionType": "rampDown",
           "parameters": [
-            -2,
-            0,
             20,
             40
           ]
@@ -192,10 +182,8 @@
       "terms": [
         {
           "name": "Bardzo cicha",
-          "functionType": "trapezoidal",
+          "functionType": "rampDown",
           "parameters": [
-            -2,
-            -1,
             40,
             50
           ]
@@ -312,10 +300,8 @@
       "terms": [
         {
           "name": "Słaba",
-          "functionType": "trapezoidal",
+          "functionType": "rampDown",
           "parameters": [
-            -0.1,
-            0.0,
             0.1,
             0.3
           ]
@@ -352,10 +338,8 @@
       "terms": [
         {
           "name": "Full synth",
-          "functionType": "trapezoidal",
+          "functionType": "rampDown",
           "parameters": [
-            -0.1,
-            0.0,
             0.05,
             0.1
           ]
@@ -392,12 +376,10 @@
         },
         {
           "name": "Unplugged",
-          "functionType": "trapezoidal",
+          "functionType": "rampUp",
           "parameters": [
             0.8,
-            0.9,
-            1.0,
-            1.1
+            0.9
           ]
         }
       ]
@@ -470,10 +452,8 @@
       "terms": [
         {
           "name": "Wokalna",
-          "functionType": "trapezoidal",
+          "functionType": "rampDown",
           "parameters": [
-            -0.2,
-            0.0,
             0.2,
             0.4
           ]
