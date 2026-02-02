@@ -279,9 +279,10 @@ public class FuzzySet {
         }
 
         UnivariateFunction integrand = x -> membershipFunction.apply(x);
-        TrapezoidIntegrator integrator = new TrapezoidIntegrator(1e-6, 1e-10, 2, 64);
+//        TrapezoidIntegrator integrator = new TrapezoidIntegrator(1e-6, 1e-10, 2, 64);
 
-        return integrator.integrate(10000, integrand, universe.getStart(), universe.getEnd());
+//        return integrator.integrate(10000, integrand, universe.getStart(), universe.getEnd());
+        return trapezoidalIntegration(integrand, universe.getStart(), universe.getEnd(), 10000);
     }
 
     private double trapezoidalIntegration(UnivariateFunction f, double a, double b, int n) {
