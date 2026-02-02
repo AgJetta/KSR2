@@ -329,7 +329,6 @@ public class MSSTest {
         assertTrue(t1_mss3 >= 0.0 && t1_mss3 <= 1.0);
         assertTrue(t1_mss4 >= 0.0 && t1_mss4 <= 1.0);
 
-        // All should be different (except possibly MSS1 vs MSS4)
         assertNotEquals(t1_mss1, t1_mss2, 0.001);
         assertNotEquals(t1_mss2, t1_mss3, 0.001);
     }
